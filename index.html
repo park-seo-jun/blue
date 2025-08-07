@@ -1,64 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stylish 2D RPG</title>
+    <title>푸른 보석</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
 <body>
+
     <div id="intro-screen">
-        <h1>Stylish 2D RPG</h1>
-        <button id="start-button">Start Game</button>
+        <h1 id="game-title">푸른 보석</h1>
+        <button id="start-button">게임 시작</button>
     </div>
 
-    <div id="game-container" style="display: none;">
-        <canvas id="game-canvas"></canvas>
-        <div id="inventory-container" class="ui-panel" style="display: none;">
-            <h2>Inventory</h2>
-            <div id="inventory-slots"></div>
-            <button id="close-inventory">Close</button>
+    <div id="game-container" class="hidden">
+        <!-- 새로운 RPG 게임 화면 -->
+        <div id="game-world">
+            <!-- WASD로 움직일 배경 요소 -->
+            <div id="background-layer"></div>
+            <!-- 화면 중앙에 고정될 플레이어 -->
+            <div id="player"></div>
         </div>
-
-        <div id="player-stats" class="ui-panel">
-            <div class="stat-row">HP: <span id="player-hp"></span>/<span id="player-max-hp"></span></div>
-            <div class="stat-row">MP: <span id="player-mp"></span>/<span id="player-max-mp"></span></div>
-            <div class="stat-row">Level: <span id="player-level"></span></div>
-            <div class="stat-row">XP: <span id="player-xp"></span>/<span id="player-xp-to-next-level"></span></div>
-            <div class="stat-row">Attack: <span id="player-attack"></span></div>
-            <div class="stat-row">Defense: <span id="player-defense"></span></div>
-        </div>
-
-        <div id="controls-hint" class="ui-panel">
-            <div id="combat-hint" style="display: none;">F: Start Combat</div>
-        </div>
-
-        <div id="health-bars-container"></div>
-    </div>
-
-    <div id="combat-confirmation-popup" class="ui-panel" style="display: none;">
-        <h2>Start Combat?</h2>
-        <p>Do you want to fight this opponent?</p>
-        <div class="popup-buttons">
-            <button id="confirm-combat-yes">Yes</button>
-            <button id="confirm-combat-no">No</button>
+        
+        <!-- 화면 위에 겹쳐질 UI 요소들 -->
+        <div id="ui-layer">
+            <div id="status-window">
+                <h3>플레이어 상태</h3>
+                <p>이름: 용사</p>
+                <p>HP: <span id="player-hp">100</span> / 100</p>
+                <p>MP: <span id="player-mp">50</span> / 50</p>
+            </div>
         </div>
     </div>
 
-    <div id="reward-screen" class="ui-panel" style="display: none;">
-        <h2>Choose Your Reward</h2>
-        <div id="reward-options">
-            <!-- Reward cards will be generated here by JS -->
-        </div>
-    </div>
-
-    <div id="game-over-screen" class="ui-panel" style="display: none;">
-        <h2>You Died</h2>
-        <button id="restart-button">Restart Game?</button>
-    </div>
-
-    <script type="module" src="main.js?v=2.0"></script>
+    <script src="main.js"></script>
 </body>
 </html>
-
