@@ -28,7 +28,29 @@
                 <h3>플레이어 상태</h3>
                 <p>이름: 용사</p>
                 <p>HP: <span id="player-hp">100</span> / 100</p>
-                <p>MP: <span id="player-mp">50</span> / 50</p>
+                <div class="health-bar-container">
+                    <div id="player-health-bar" class="health-bar"></div>
+                </div>
+                <p style="margin-top: 10px;">MP: <span id="player-mp">50</span> / 50</p>
+                <p>Gold: <span id="player-gold">1000</span> G</p>
+            </div>
+
+            <!-- 게임 오버 화면 (평소에는 숨겨져 있음) -->
+            <div id="game-over-screen" class="hidden">
+                <h1>GAME OVER</h1>
+                <button id="restart-button">다시 시작</button>
+            </div>
+        </div>
+
+        <!-- 상점 UI (평소에는 숨겨져 있음) -->
+        <div id="shop-window" class="hidden">
+            <h2>상점</h2>
+            <ul id="item-list">
+                <!-- 아이템 목록은 JS에서 동적으로 추가 -->
+            </ul>
+            <div id="shop-footer">
+                <p>내 소지품: <span id="player-inventory"></span></p>
+                <button id="close-shop-button">나가기</button>
             </div>
         </div>
     </div>

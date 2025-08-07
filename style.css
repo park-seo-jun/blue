@@ -1,9 +1,9 @@
 /* Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Nanum+Gothic&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&family=Do+Hyeon&display=swap');
 
 body {
     margin: 0;
-    font-family: 'Nanum Gothic', sans-serif;
+    font-family: 'Noto Sans KR', sans-serif;
     color: white;
     background-color: #000; /* 전체 배경은 검은색 */
     overflow: hidden;
@@ -21,7 +21,7 @@ body {
     background: radial-gradient(ellipse at center, #1a234a 0%, #00001a 100%);
 }
 #game-title {
-    font-family: 'Cinzel', serif;
+    font-family: 'Do Hyeon', sans-serif;
     font-size: 5rem;
     color: #99ddff;
     text-shadow: 0 0 7px #99ddff, 0 0 42px #00aaff;
@@ -29,7 +29,7 @@ body {
 }
 @keyframes flicker { to { text-shadow: 0 0 7px #99ddff, 0 0 60px #00aaff; } }
 #start-button {
-    font-family: 'Cinzel', serif;
+    font-family: 'Do Hyeon', sans-serif;
     font-size: 1.5rem;
     color: #99ddff;
     background-color: transparent;
@@ -227,7 +227,224 @@ body {
     background-color: #DAA520; /* GoldenRod - 기본 색상, JS에서 덮어씀 */
     border: 2px solid #614b0f;
     /* border-radius: 50%; */ /* 원형 모양 제거 -> 사각형 */
-    z-index: 6; /* 집(5)보다 높고, 플레이어(10)보다 낮게 */
+    z-index: 6; /* 집(5)보다 높고, 플레이어(10)보다 높게 */
     box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     transition: transform 0.1s linear; /* 부드러운 움직임 */
+}
+
+/* --- 상점 스타일 --- */
+.shop {
+    position: absolute;
+    z-index: 5;
+}
+.shop .wall {
+    width: 220px;
+    height: 150px;
+    background: linear-gradient(to bottom, #e0c4a0, #b88a6d); /* 더 밝은 나무 */
+    border: 4px solid #5C4033;
+    border-radius: 5px;
+    box-shadow: 5px 5px 10px rgba(0,0,0,0.5);
+}
+.shop .roof {
+    width: 250px;
+    height: 60px;
+    background: #006400; /* 짙은 녹색 지붕 */
+    position: absolute;
+    top: -30px;
+    left: -15px;
+    border-radius: 5px;
+    border: 4px solid #5C4033;
+}
+.shop .sign {
+    position: absolute;
+    top: 50px;
+    left: -30px;
+    width: 30px;
+    height: 50px;
+    background-color: #8B4513;
+    border: 2px solid #4a250a;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #FFD700;
+    padding-top: 5px;
+}
+
+/* --- 상점 주인 스타일 --- */
+.shopkeeper {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    background-color: #4682B4; /* SteelBlue */
+    border: 2px solid #2a4d6b;
+    z-index: 6;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+/* --- 상점 창 스타일 --- */
+#shop-window {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 2px solid #99ddff;
+    border-radius: 10px;
+    z-index: 20; /* 최상단에 표시 */
+    color: #ddeeff;
+    padding: 20px;
+    box-shadow: 0 0 15px rgba(153, 221, 255, 0.5);
+    pointer-events: all;
+}
+#shop-window h2 {
+    text-align: center;
+    margin-top: 0;
+    color: #99ddff;
+    border-bottom: 1px solid #66aaff;
+    padding-bottom: 10px;
+}
+#item-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+#item-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #334;
+}
+#item-list li:hover {
+    background-color: rgba(153, 221, 255, 0.1);
+}
+#item-list .item-price {
+    color: #FFD700;
+    font-weight: bold;
+}
+#item-list button {
+    background-color: #4682B4;
+    color: white;
+    border: 1px solid #99ddff;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+#item-list button:hover {
+    background-color: #5a9cdb;
+}
+#shop-footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+#close-shop-button {
+    background-color: #A52A2A;
+    color: white;
+    border: 1px solid #ff9999;
+    border-radius: 5px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+#close-shop-button:hover {
+    background-color: #c44e4e;
+}
+
+/* --- 사냥터 스타일 --- */
+.hunting-ground {
+    position: absolute;
+    background-color: #4a5d23; /* 마을보다 어두운 녹색 */
+    z-index: -1; /* 다른 요소들 뒤에 위치 */
+}
+
+/* --- 몬스터 스타일 --- */
+.monster {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background-color: #8B0000; /* 어두운 빨강 */
+    border: 2px solid #400000;
+    /* border-radius: 50%; */ /* 원형 -> 사각형으로 변경 */
+    z-index: 7; /* NPC보다 앞에 위치 */
+}
+
+/* --- 체력바 스타일 --- */
+.health-bar-container {
+    width: 100%;
+    height: 10px;
+    background-color: #555;
+    border: 1px solid #000;
+    border-radius: 3px;
+    margin-top: 5px;
+}
+
+.health-bar {
+    height: 100%;
+    background-color: #00FF00; /* 녹색 */
+    border-radius: 2px;
+    transition: width 0.2s linear;
+}
+
+.monster .health-bar-container {
+    position: absolute;
+    top: -15px; /* 몬스터 위에 표시 */
+    width: 100%;
+    height: 5px;
+}
+.monster .health-bar {
+    background-color: #FF0000; /* 빨간색 */
+}
+
+/* --- 공격 효과 스타일 --- */
+.attack-effect {
+    position: absolute;
+    background-color: rgba(255, 0, 0, 0.5); /* 반투명 빨강 */
+    z-index: 11; /* 플레이어보다 앞에 표시 */
+}
+
+/* --- 게임 오버 화면 스타일 --- */
+#game-over-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 30; /* 최상단에 표시 */
+    pointer-events: all;
+}
+
+#game-over-screen h1 {
+    font-family: 'Do Hyeon', sans-serif;
+    font-size: 6rem;
+    color: #DC143C; /* Crimson */
+    text-shadow: 0 0 10px #ff0000;
+}
+
+#restart-button {
+    font-family: 'Do Hyeon', sans-serif;
+    font-size: 2rem;
+    color: #ddeeff;
+    background-color: transparent;
+    border: 2px solid #ddeeff;
+    padding: 15px 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#restart-button:hover {
+    background-color: #ddeeff;
+    color: #000;
 }
