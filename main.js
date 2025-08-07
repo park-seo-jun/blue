@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const introScreen = document.getElementById('intro-screen');
     const gameContainer = document.getElementById('game-container');
 
-    // 원래의 '게임 시작' 버튼 클릭 이벤트를 사용합니다.
     startButton.addEventListener('click', () => {
         introScreen.style.opacity = '0';
         setTimeout(() => {
@@ -15,112 +14,95 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function startGame() {
-    // DOM 요소
+    // DOM 요소 (모든 UI 요소를 여기서 한 번에 찾습니다)
     const gameWorld = document.getElementById('game-world');
     const backgroundLayer = document.getElementById('background-layer');
     const playerHpEl = document.getElementById('player-hp');
+    const playerMaxHpEl = document.getElementById('player-max-hp');
     const playerHealthBarEl = document.getElementById('player-health-bar');
-    const playerMpEl = document.getElementById('player-mp');
+    const playerLevelEl = document.getElementById('player-level');
+    const playerXpEl = document.getElementById('player-xp');
+    const playerXpNeededEl = document.getElementById('player-xp-needed');
+    const playerXpBarEl = document.getElementById('player-xp-bar');
+    const playerJobEl = document.getElementById('player-job');
     const playerGoldEl = document.getElementById('player-gold');
-    const shopWindow = document.getElementById('shop-window');
-    const itemListEl = document.getElementById('item-list');
-    const closeShopButton = document.getElementById('close-shop-button');
-    const playerInventoryEl = document.getElementById('player-inventory');
     const gameOverScreen = document.getElementById('game-over-screen');
     const restartButton = document.getElementById('restart-button');
+    const shopWindow = document.getElementById('shop-window');
+    const closeShopButton = document.getElementById('close-shop-button');
+    const itemListEl = document.getElementById('item-list');
+    const playerInventoryEl = document.getElementById('player-inventory');
 
     // 게임 설정
-    const world = { width: 3000, height: 3000 };
-    const villageCenter = { x: world.width / 2, y: world.height / 2 };
     const playerSpeed = 5;
-
-    // 게임 상태
     let isGameOver = false;
 
-    // 게임 객체
-    const obstacles = [];
-    const monsters = [];
-    let shopkeeper;
+    // 플레이어 DOM 요소 생성 및 설정
+    const playerEl = document.createElement('div');
+    playerEl.id = 'player';
+    backgroundLayer.appendChild(playerEl);
 
-    // 플레이어 데이터
+    // 게임 객체
+    const monsters = [];
+    const obstacles = [];
+    let shopkeeper;
+    let jobChanger;
+
     const player = {
-        x: villageCenter.x, 
-        y: villageCenter.y + 200,
+        element: playerEl,
+        x: 1500, 
+        y: 1700,
         width: 30, height: 30,
         hp: 100, maxHp: 100,
-        mp: 50, maxMp: 50,
         gold: 1000,
         inventory: [],
         direction: 'w',
-        attackPower: 25,
+        baseAttackPower: 5, // 기본 공격력
+        attackPower: 5,     // 최종 공격력 (무기 포함)
         isAttacking: false,
+        level: 1,
+        xp: 0,
+        xpToNextLevel: 100,
+        job: '없음',
+        equippedWeapon: null,
     };
 
     const shopItems = [
-        { name: 'HP 포션', price: 50 },
-        { name: 'MP 포션', price: 70 },
-        { name: '강철 검', price: 500 },
-        { name: '가죽 갑옷', price: 300 },
+        { name: 'HP 포션', price: 50, type: 'potion' },
+        { name: '낡은 검', price: 100, type: 'sword', power: 5 },
+        { name: '낡은 지팡이', price: 150, type: 'wand', power: 7 },
+        { name: '낡은 권총', price: 75, type: 'gun', power: 4 },
     ];
 
-    function updateScreen() {
-        playerHpEl.textContent = player.hp;
-        playerMpEl.textContent = player.mp;
-        playerGoldEl.textContent = player.gold;
-        playerInventoryEl.textContent = player.inventory.join(', ') || '없음';
-        playerHealthBarEl.style.width = `${(player.hp / player.maxHp) * 100}%`;
-
-        const cameraX = -player.x + (window.innerWidth / 2);
-        const cameraY = -player.y + (window.innerHeight / 2);
-        backgroundLayer.style.transform = `translate(${cameraX}px, ${cameraY}px)`;
+    // --- 충돌 감지 함수 ---
+    function isColliding(el1, el2) {
+        const rect1 = el1.getBoundingClientRect();
+        const rect2 = el2.getBoundingClientRect();
+        return !(rect1.right < rect2.left || rect1.left > rect2.right || rect1.bottom < rect2.top || rect1.top > rect2.bottom);
     }
 
-    function isColliding(rect1, rect2) {
-        return rect1.x < rect2.x + rect2.width &&
-               rect1.x + rect1.width > rect2.x &&
-               rect1.y < rect2.y + rect2.height &&
-               rect1.y + rect1.height > rect2.y;
-    }
-
-    function generateGrass(count) {
-        for (let i = 0; i < count; i++) {
-            const grass = document.createElement('div');
-            grass.classList.add('grass');
-            grass.textContent = '^';
-            grass.style.left = `${Math.random() * world.width}px`;
-            grass.style.top = `${Math.random() * world.height}px`;
-            backgroundLayer.appendChild(grass);
-        }
-    }
-
-    function generateHouses() {
-        const housePositions = [
-            { x: villageCenter.x + 150, y: villageCenter.y - 250 },
-            { x: villageCenter.x - 350, y: villageCenter.y + 150 },
-            { x: villageCenter.x + 150, y: villageCenter.y + 150 },
-        ];
-        const houseSize = { width: 180, height: 120 };
-        housePositions.forEach((pos) => {
+    // --- 월드 생성 ---
+    function createWorld() {
+        const housePositions = [ { x: 1650, y: 1250 }, { x: 1150, y: 1650 }, { x: 1650, y: 1650 }];
+        housePositions.forEach(pos => {
             const house = document.createElement('div');
             house.className = 'house';
+            house.style.left = `${pos.x}px`;
+            house.style.top = `${pos.y}px`;
             const wall = document.createElement('div');
             wall.className = 'wall';
             const roof = document.createElement('div');
             roof.className = 'roof';
             house.appendChild(roof);
             house.appendChild(wall);
-            house.style.left = `${pos.x}px`;
-            house.style.top = `${pos.y}px`;
             backgroundLayer.appendChild(house);
-            obstacles.push({ x: pos.x, y: pos.y, width: houseSize.width, height: houseSize.height });
+            obstacles.push(house);
         });
-    }
 
-    function generateShop() {
-        const pos = { x: villageCenter.x - 350, y: villageCenter.y - 250 };
-        const shopSize = { width: 250, height: 150 };
-        const shop = document.createElement('div');
-        shop.className = 'shop';
+        const shopEl = document.createElement('div');
+        shopEl.className = 'shop';
+        shopEl.style.left = '1150px';
+        shopEl.style.top = '1250px';
         const wall = document.createElement('div');
         wall.className = 'wall';
         const roof = document.createElement('div');
@@ -128,27 +110,26 @@ function startGame() {
         const sign = document.createElement('div');
         sign.className = 'sign';
         sign.textContent = '상점';
-        shop.appendChild(roof);
-        shop.appendChild(wall);
-        shop.appendChild(sign);
-        shop.style.left = `${pos.x}px`;
-        shop.style.top = `${pos.y}px`;
-        backgroundLayer.appendChild(shop);
-        obstacles.push({ x: pos.x, y: pos.y, width: shopSize.width, height: shopSize.height });
+        shopEl.appendChild(roof);
+        shopEl.appendChild(wall);
+        shopEl.appendChild(sign);
+        backgroundLayer.appendChild(shopEl);
+        obstacles.push(shopEl);
 
-        shopkeeper = {
-            element: document.createElement('div'),
-            x: pos.x + (shopSize.width / 2) - 16,
-            y: pos.y + shopSize.height,
-            width: 32, height: 32,
-        };
-        shopkeeper.element.className = 'shopkeeper';
-        shopkeeper.element.style.left = `${shopkeeper.x}px`;
-        shopkeeper.element.style.top = `${shopkeeper.y}px`;
-        backgroundLayer.appendChild(shopkeeper.element);
-    }
-    
-    function generateHuntingGround() {
+        const shopkeeperEl = document.createElement('div');
+        shopkeeperEl.className = 'shopkeeper';
+        shopkeeperEl.style.left = `${1150 + (250 / 2) - 16}px`;
+        shopkeeperEl.style.top = `${1250 + 150}px`;
+        backgroundLayer.appendChild(shopkeeperEl);
+        shopkeeper = { element: shopkeeperEl };
+
+        const jobChangerEl = document.createElement('div');
+        jobChangerEl.className = 'job-changer';
+        jobChangerEl.style.left = '1500px';
+        jobChangerEl.style.top = '1400px';
+        backgroundLayer.appendChild(jobChangerEl);
+        jobChanger = { element: jobChangerEl };
+
         const area = { x: 2000, y: 500, width: 1000, height: 2000 };
         const ground = document.createElement('div');
         ground.className = 'hunting-ground';
@@ -157,54 +138,106 @@ function startGame() {
         ground.style.width = `${area.width}px`;
         ground.style.height = `${area.height}px`;
         backgroundLayer.appendChild(ground);
-        generateMonsters(15, area);
-    }
 
-    function generateMonsters(count, area) {
-        for (let i = 0; i < count; i++) {
-            const monsterEl = document.createElement('div');
-            monsterEl.className = 'monster';
-            
-            const healthBarContainer = document.createElement('div');
-            healthBarContainer.className = 'health-bar-container';
-            
-            const healthBar = document.createElement('div');
-            healthBar.className = 'health-bar';
-            
-            healthBarContainer.appendChild(healthBar);
-            monsterEl.appendChild(healthBarContainer);
-
-            const monster = {
-                element: monsterEl,
-                healthBar: healthBar,
-                x: area.x + Math.random() * (area.width - 30),
-                y: area.y + Math.random() * (area.height - 30),
-                width: 30, height: 30,
-                hp: 50, maxHp: 50,
-                speed: 1 + Math.random(),
-                dx: 0, dy: 0,
-                moveTimer: 0,
-            };
-            monster.element.style.left = `${monster.x}px`;
-            monster.element.style.top = `${monster.y}px`;
-            monsters.push(monster);
-            backgroundLayer.appendChild(monster.element);
+        for (let i = 0; i < 15; i++) {
+            createMonster(area);
         }
     }
 
-    function updateMonsters() {
-        monsters.forEach(monster => {
-            monster.moveTimer--;
-            if (monster.moveTimer <= 0) {
-                monster.dx = (Math.random() - 0.5) * monster.speed;
-                monster.dy = (Math.random() - 0.5) * monster.speed;
-                monster.moveTimer = 60 + Math.random() * 120;
+    function createMonster(area) {
+        const monsterEl = document.createElement('div');
+        monsterEl.className = 'monster';
+        const healthBarContainer = document.createElement('div');
+        healthBarContainer.className = 'health-bar-container';
+        const healthBar = document.createElement('div');
+        healthBar.className = 'health-bar';
+        healthBarContainer.appendChild(healthBar);
+        monsterEl.appendChild(healthBarContainer);
+
+        const monster = {
+            element: monsterEl,
+            healthBar: healthBar,
+            x: area.x + Math.random() * (area.width - 30),
+            y: area.y + Math.random() * (area.height - 30),
+            hp: 50, maxHp: 50,
+            xpValue: 40,
+        };
+        monster.element.style.left = `${monster.x}px`;
+        monster.element.style.top = `${monster.y}px`;
+        monsters.push(monster);
+        backgroundLayer.appendChild(monster.element);
+    }
+    
+    function respawnMonster() {
+        setTimeout(() => {
+            if (monsters.length < 15) {
+                const area = { x: 2000, y: 500, width: 1000, height: 2000 };
+                createMonster(area);
             }
-            monster.x += monster.dx;
-            monster.y += monster.dy;
-            monster.element.style.left = `${monster.x}px`;
-            monster.element.style.top = `${monster.y}px`;
-        });
+        }, 5000);
+    }
+
+    // --- 전투, 레벨업, 장착 관련 함수 ---
+    function gainXp(amount) {
+        player.xp += amount;
+        while (player.xp >= player.xpToNextLevel) {
+            levelUp();
+        }
+        updateUI();
+    }
+
+    function levelUp() {
+        player.level++;
+        player.xp -= player.xpToNextLevel;
+        player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.5);
+        player.maxHp += 20;
+        player.hp = player.maxHp;
+        player.baseAttackPower += 2; // 레벨업 시 기본 공격력도 소폭 상승
+        updateAttackPower();
+        player.element.style.filter = 'brightness(3)';
+        setTimeout(() => { player.element.style.filter = 'brightness(1)'; }, 200);
+    }
+
+    function updateAttackPower() {
+        const weaponPower = player.equippedWeapon ? player.equippedWeapon.power : 0;
+        player.attackPower = player.baseAttackPower + weaponPower;
+    }
+
+    function updatePlayerVisuals() {
+        // 기존 무기 제거
+        const existingWeapon = player.element.querySelector('.player-weapon');
+        if (existingWeapon) {
+            existingWeapon.remove();
+        }
+
+        // 새 무기 추가
+        if (player.equippedWeapon) {
+            const weaponEl = document.createElement('div');
+            weaponEl.className = `player-weapon ${player.equippedWeapon.type}`;
+            player.element.appendChild(weaponEl);
+        }
+    }
+
+    function equipWeapon() {
+        // 인벤토리에서 장착 가능한 가장 좋은 무기를 찾음
+        let bestWeapon = null;
+        for (const itemName of player.inventory) {
+            const item = shopItems.find(shopItem => shopItem.name === itemName);
+            if (item && item.power) { // 무기인 경우
+                if (!bestWeapon || item.power > bestWeapon.power) {
+                    bestWeapon = item;
+                }
+            }
+        }
+
+        if (bestWeapon) {
+            player.equippedWeapon = bestWeapon;
+            updateAttackPower();
+            updatePlayerVisuals();
+            alert(`${bestWeapon.name}을(를) 장착했습니다! (공격력: ${player.attackPower})`);
+        } else {
+            alert("장착할 무기가 없습니다.");
+        }
     }
 
     function playerAttack() {
@@ -214,47 +247,31 @@ function startGame() {
         const attackRange = 50;
         const attackEffect = document.createElement('div');
         attackEffect.className = 'attack-effect';
+        
+        const playerRect = player.element.getBoundingClientRect();
+        let hitboxRect = { top: 0, left: 0, width: 0, height: 0 };
 
-        const hitbox = { x: 0, y: 0, width: 0, height: 0 };
+        if (player.direction === 'w') hitboxRect = { top: playerRect.top - attackRange, left: playerRect.left, width: playerRect.width, height: attackRange };
+        else if (player.direction === 's') hitboxRect = { top: playerRect.bottom, left: playerRect.left, width: playerRect.width, height: attackRange };
+        else if (player.direction === 'a') hitboxRect = { top: playerRect.top, left: playerRect.left - attackRange, width: attackRange, height: playerRect.height };
+        else if (player.direction === 'd') hitboxRect = { top: playerRect.top, left: playerRect.right, width: attackRange, height: playerRect.height };
 
-        if (player.direction === 'w') {
-            hitbox.width = player.width;
-            hitbox.height = attackRange;
-            hitbox.x = player.x;
-            hitbox.y = player.y - attackRange;
-        } else if (player.direction === 's') {
-            hitbox.width = player.width;
-            hitbox.height = attackRange;
-            hitbox.x = player.x;
-            hitbox.y = player.y + player.height;
-        } else if (player.direction === 'a') {
-            hitbox.width = attackRange;
-            hitbox.height = player.height;
-            hitbox.x = player.x - attackRange;
-            hitbox.y = player.y;
-        } else if (player.direction === 'd') {
-            hitbox.width = attackRange;
-            hitbox.height = player.height;
-            hitbox.x = player.x + player.width;
-            hitbox.y = player.y;
-        }
-
-        attackEffect.style.left = `${hitbox.x}px`;
-        attackEffect.style.top = `${hitbox.y}px`;
-        attackEffect.style.width = `${hitbox.width}px`;
-        attackEffect.style.height = `${hitbox.height}px`;
+        const backgroundRect = backgroundLayer.getBoundingClientRect();
+        attackEffect.style.left = `${hitboxRect.left - backgroundRect.left}px`;
+        attackEffect.style.top = `${hitboxRect.top - backgroundRect.top}px`;
+        attackEffect.style.width = `${hitboxRect.width}px`;
+        attackEffect.style.height = `${hitboxRect.height}px`;
         backgroundLayer.appendChild(attackEffect);
 
         for (let i = monsters.length - 1; i >= 0; i--) {
             const monster = monsters[i];
-            if (isColliding(hitbox, monster)) {
+            if (isColliding(attackEffect, monster.element)) {
                 monster.hp -= player.attackPower;
-                monster.element.style.filter = 'brightness(2)';
-                setTimeout(() => { monster.element.style.filter = 'brightness(1)'; }, 100);
-
                 if (monster.hp <= 0) {
+                    gainXp(monster.xpValue);
                     monster.element.remove();
                     monsters.splice(i, 1);
+                    respawnMonster();
                 } else {
                     monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
                 }
@@ -264,68 +281,103 @@ function startGame() {
         setTimeout(() => {
             attackEffect.remove();
             player.isAttacking = false;
-        }, 150);
+        }, 200);
     }
 
-    function checkPlayerCollision() {
-        for (let i = monsters.length - 1; i >= 0; i--) {
-            const monster = monsters[i];
-            if (isColliding(player, monster)) {
-                player.hp -= 10;
-                if (player.hp < 0) player.hp = 0;
-                
-                if (player.direction === 'w') player.y += 40;
-                if (player.direction === 's') player.y -= 40;
-                if (player.direction === 'a') player.x += 40;
-                if (player.direction === 'd') player.x -= 40;
-
-                monster.element.remove();
-                monsters.splice(i, 1);
-                
-                if (player.hp <= 0) {
-                    gameOverScreen.classList.remove('hidden');
-                    isGameOver = true;
-                    return true;
-                }
-                break;
-            }
+    // --- 상점 및 전직 관련 함수 ---
+    function changeJob() {
+        if (player.level < 3) {
+            alert("레벨 3 이상만 전직할 수 있습니다.");
+            return;
         }
-        return false;
+        if (player.job !== '없음') {
+            alert("이미 전직했습니다.");
+            return;
+        }
+
+        const rand = Math.random() * 100;
+        let newJob = '';
+        if (rand <= 1) newJob = '마검사';
+        else if (rand <= 34) newJob = '전사';
+        else if (rand <= 67) newJob = '마법사';
+        else newJob = '건슬링어';
+        
+        player.job = newJob;
+        alert(`${newJob}(으)로 전직했습니다!`);
+        updateUI();
     }
 
     function openShop() {
         shopWindow.classList.remove('hidden');
-        cancelAnimationFrame(gameLoopTimeout);
+        itemListEl.innerHTML = '';
+        shopItems.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${item.name}</span><span>${item.price} G</span><button>구매</button>`;
+            
+            const button = li.querySelector('button');
+            let canBuy = false;
+            // 전직 전에는 포션만 구매 가능하도록 수정
+            if (player.job === '없음') {
+                canBuy = item.type === 'potion';
+            } else {
+                switch (player.job) {
+                    case '전사': canBuy = item.type === 'sword' || item.type === 'potion'; break;
+                    case '마법사': canBuy = item.type === 'wand' || item.type === 'potion'; break;
+                    case '건슬링어': canBuy = item.type === 'gun' || item.type === 'potion'; break;
+                    case '마검사': canBuy = item.type === 'sword' || item.type === 'wand' || item.type === 'potion'; break;
+                }
+            }
+
+            if (!canBuy) {
+                button.disabled = true;
+                li.style.color = '#888';
+            }
+
+            button.addEventListener('click', () => buyItem(item));
+            itemListEl.appendChild(li);
+        });
+        updateUI();
     }
 
     function closeShop() {
         shopWindow.classList.add('hidden');
-        gameLoop();
     }
 
     function buyItem(item) {
         if (player.gold >= item.price) {
             player.gold -= item.price;
             player.inventory.push(item.name);
-            updateScreen();
-            alert(`${item.name}을(를) 구매했습니다!`);
+            updateUI();
+            if (item.type !== 'potion') {
+                alert(`${item.name}을(를) 구매했습니다! 'E' 키를 눌러 장착하세요.`);
+            }
         } else {
             alert('골드가 부족합니다!');
         }
     }
+    
+    function updateUI() {
+        playerHpEl.textContent = player.hp;
+        playerMaxHpEl.textContent = player.maxHp;
+        playerHealthBarEl.style.width = `${(player.hp / player.maxHp) * 100}%`;
+        playerLevelEl.textContent = player.level;
+        playerXpEl.textContent = player.xp;
+        playerXpNeededEl.textContent = player.xpToNextLevel;
+        playerXpBarEl.style.width = `${(player.xp / player.xpToNextLevel) * 100}%`;
+        playerJobEl.textContent = player.job;
+        playerGoldEl.textContent = player.gold;
+        if (playerInventoryEl) {
+            playerInventoryEl.textContent = player.inventory.join(', ') || '없음';
+        }
+    }
 
-    // --- 초기화 ---
-    generateGrass(200);
-    generateHouses();
-    generateShop();
-    generateHuntingGround();
-    updateScreen();
-
-    // --- 키보드 입력 및 게임 루프 ---
+    // --- 게임 루프 ---
     const keysPressed = {};
     let gameLoopTimeout;
 
     function gameLoop() {
+        if (isGameOver) return;
+
         let moveX = 0;
         let moveY = 0;
         if (keysPressed['w']) { moveY = -playerSpeed; player.direction = 'w'; }
@@ -334,74 +386,93 @@ function startGame() {
         if (keysPressed['d']) { moveX = playerSpeed; player.direction = 'd'; }
 
         if (moveX !== 0 || moveY !== 0) {
-            const nextPos = { ...player, x: player.x + moveX, y: player.y + moveY };
-            
+            // 1. 먼저 플레이어의 논리적 위치를 이동시킵니다.
+            player.x += moveX;
+            player.y += moveY;
+
+            // 2. 이동한 위치를 기준으로 플레이어 DOM 요소의 위치를 업데이트합니다.
+            player.element.style.left = `${player.x}px`;
+            player.element.style.top = `${player.y}px`;
+
+            // 3. 화면에 그려진 DOM 요소를 기준으로 충돌을 확인합니다.
             let isCollidingWithObstacle = false;
             for (const obstacle of obstacles) {
-                if (isColliding(nextPos, obstacle)) {
+                if (isColliding(player.element, obstacle)) {
                     isCollidingWithObstacle = true;
                     break;
                 }
             }
 
-            if (!isCollidingWithObstacle) {
-                player.x = nextPos.x;
-                player.y = nextPos.y;
+            // 4. 만약 충돌했다면, 논리적 위치를 다시 원래대로 되돌립니다.
+            if (isCollidingWithObstacle) {
+                player.x -= moveX;
+                player.y -= moveY;
+            }
+            
+            // 5. 최종 위치를 다시 DOM 요소에 반영합니다.
+            player.element.style.left = `${player.x}px`;
+            player.element.style.top = `${player.y}px`;
+        }
+
+        for (let i = monsters.length - 1; i >= 0; i--) {
+            const monster = monsters[i];
+            if (isColliding(player.element, monster.element)) {
+                player.hp -= 10;
+                monster.element.remove();
+                monsters.splice(i, 1);
+                respawnMonster();
+                if (player.hp <= 0) {
+                    isGameOver = true;
+                    gameOverScreen.classList.remove('hidden');
+                }
+                break;
             }
         }
-
-        updateMonsters();
-        if (checkPlayerCollision()) {
-            cancelAnimationFrame(gameLoopTimeout);
-            updateScreen();
-            return;
-        }
-
-        updateScreen();
+        
+        updateUI();
+        const cameraX = -player.x + (window.innerWidth / 2);
+        const cameraY = -player.y + (window.innerHeight / 2);
+        backgroundLayer.style.transform = `translate(${cameraX}px, ${cameraY}px)`;
+        
         gameLoopTimeout = requestAnimationFrame(gameLoop);
     }
 
+    // --- 이벤트 리스너 ---
     document.addEventListener('keydown', (event) => {
         if (isGameOver) return;
-
         const key = event.key.toLowerCase();
-        if (shopWindow.classList.contains('hidden')) {
-            keysPressed[key] = true;
-        }
+        keysPressed[key] = true;
 
         if (key === 'f') {
-            if (!shopWindow.classList.contains('hidden')) {
-                closeShop();
-                return;
+            if (isColliding(player.element, shopkeeper.element)) {
+                shopWindow.classList.toggle('hidden');
+                if (!shopWindow.classList.contains('hidden')) openShop();
             }
-            const dx = (player.x + player.width / 2) - (shopkeeper.x + shopkeeper.width / 2);
-            const dy = (player.y + player.height / 2) - (shopkeeper.y + shopkeeper.height / 2);
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < 50) {
-                openShop();
+            if (isColliding(player.element, jobChanger.element)) {
+                changeJob();
             }
+        }
+        if (key === 'e') { // 'E' 키로 장착
+            equipWeapon();
         }
     });
 
     document.addEventListener('keyup', (event) => {
-        if (isGameOver) return;
         keysPressed[event.key.toLowerCase()] = false;
     });
     
     gameWorld.addEventListener('mousedown', (event) => {
-        if (isGameOver) return;
-        if (shopWindow.classList.contains('hidden')) {
-            if (event.button === 0) { // 0은 좌클릭
-                playerAttack();
-            }
+        if (isGameOver || !shopWindow.classList.contains('hidden')) return;
+        if (event.button === 0) {
+            playerAttack();
         }
     });
-
-    closeShopButton.addEventListener('click', closeShop);
     
-    restartButton.addEventListener('click', () => {
-        location.reload();
-    });
+    restartButton.addEventListener('click', () => location.reload());
+    closeShopButton.addEventListener('click', closeShop);
 
+    // --- 게임 시작 ---
+    createWorld();
+    updateUI();
     gameLoop();
 }

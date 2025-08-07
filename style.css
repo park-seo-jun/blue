@@ -5,96 +5,151 @@ body {
     margin: 0;
     font-family: 'Noto Sans KR', sans-serif;
     color: white;
-    background-color: #000; /* 전체 배경은 검은색 */
+    background-color: #000;
     overflow: hidden;
 }
 
-/* --- 인트로 화면 스타일 (기존과 거의 동일) --- */
-[id="intro-screen"] {
+.hidden {
+    display: none !important;
+}
+
+/* --- Screens --- */
+#intro-screen, #game-over-screen {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 100vh;
     text-align: center;
-    transition: opacity 1s;
-    background: radial-gradient(ellipse at center, #1a234a 0%, #00001a 100%);
+    position: absolute;
+    width: 100%;
+    z-index: 20;
 }
+
+#intro-screen {
+    background: radial-gradient(ellipse at center, #1a234a 0%, #00001a 100%);
+    transition: opacity 1s;
+}
+
+#game-over-screen {
+    background-color: rgba(0, 0, 0, 0.8);
+    pointer-events: all;
+}
+
 #game-title {
     font-family: 'Do Hyeon', sans-serif;
     font-size: 5rem;
     color: #99ddff;
     text-shadow: 0 0 7px #99ddff, 0 0 42px #00aaff;
-    animation: flicker 1.5s infinite alternate;
 }
-@keyframes flicker { to { text-shadow: 0 0 7px #99ddff, 0 0 60px #00aaff; } }
-#start-button {
+
+#start-button, #restart-button {
     font-family: 'Do Hyeon', sans-serif;
     font-size: 1.5rem;
     color: #99ddff;
     background-color: transparent;
     border: 2px solid #99ddff;
     padding: 15px 30px;
-    border-radius: 50px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 0 10px #00aaff;
-}
-#start-button:hover {
-    background-color: #99ddff;
-    color: #00001a;
-    box-shadow: 0 0 20px #99ddff;
-}
-.hidden {
-    display: none !important;
 }
 
-/* --- 새로운 게임 화면 스타일 --- */
+#start-button:hover, #restart-button:hover {
+    background-color: #99ddff;
+    color: #00001a;
+}
+
+#game-over-screen h1 {
+    font-family: 'Do Hyeon', sans-serif;
+    font-size: 6rem;
+    color: #DC143C;
+    text-shadow: 0 0 10px #ff0000;
+}
+
+/* --- Game World --- */
 #game-container {
     width: 100vw;
     height: 100vh;
-    position: relative; /* 자식 요소들의 기준점 */
+    position: relative;
 }
 
 #game-world {
     width: 100%;
     height: 100%;
-    background-color: #556B2F; /* 진한 연두색 배경 */
-    position: relative; /* 플레이어와 배경 레이어의 기준점 */
-    overflow: hidden; /* 화면 밖으로 나가는 배경은 숨김 */
+    background-color: #556B2F;
+    position: relative;
+    overflow: hidden;
 }
 
 #background-layer {
     position: absolute;
-    width: 3000px; /* 배경을 매우 크게 만들어 움직일 공간 확보 */
+    width: 3000px;
     height: 3000px;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
 }
 
+/* --- Game Objects --- */
 #player {
     position: absolute;
     width: 30px;
     height: 30px;
-    /* 파란색 그라데이션 배경 */
     background-image: linear-gradient(to bottom right, #3a7bd5, #00d2ff);
     border: 2px solid #eef;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%); /* 정확한 중앙 정렬 */
     z-index: 10;
-    box-shadow: 0 0 8px rgba(0, 210, 255, 0.7); /* 약간의 빛나는 효과 */
+    transition: filter 0.1s;
+    position: relative; /* 자식 요소(무기)의 기준점이 되도록 추가 */
 }
 
-/* --- UI 레이어 스타일 --- */
+.player-weapon {
+    position: absolute;
+    width: 10px;
+    height: 35px;
+    background-color: #ccc;
+    border: 1px solid #555;
+    border-radius: 3px;
+    right: -15px; /* 플레이어 오른쪽에 위치 */
+    top: -5px;
+    transform: rotate(20deg);
+}
+
+.player-weapon.wand {
+    background-color: #8A2BE2; /* 보라색 지팡이 */
+    box-shadow: 0 0 5px #DA70D6;
+}
+
+.player-weapon.gun {
+    width: 20px;
+    height: 12px;
+    background-color: #666; /* 회색 권총 */
+    right: -25px;
+    top: 5px;
+}
+
+
+.house, .shop, .shopkeeper, .monster, .attack-effect, .job-changer {
+    position: absolute;
+}
+
+.house .wall { width: 150px; height: 120px; background: linear-gradient(to bottom, #D2B48C, #A0522D); border: 4px solid #5C4033; }
+.house .roof { width: 180px; height: 80px; background: #8B0000; position: absolute; top: -70px; left: -15px; clip-path: polygon(0% 100%, 0% 20%, 50% 0%, 100% 20%, 100% 100%); }
+
+.shop .wall { width: 220px; height: 150px; background: linear-gradient(to bottom, #e0c4a0, #b88a6d); border: 4px solid #5C4033; }
+.shop .roof { width: 250px; height: 60px; background: #006400; position: absolute; top: -30px; left: -15px; }
+.shop .sign { position: absolute; top: 50px; left: -30px; width: 30px; height: 50px; background-color: #8B4513; writing-mode: vertical-rl; text-orientation: upright; text-align: center; font-size: 18px; color: #FFD700; }
+
+.shopkeeper { width: 32px; height: 32px; background-color: #4682B4; border: 2px solid #2a4d6b; z-index: 6; }
+.job-changer { width: 32px; height: 32px; background-color: #8A2BE2; border: 2px solid #4B0082; z-index: 6; border-radius: 50%; }
+.monster { width: 30px; height: 30px; background-color: #8B0000; border: 2px solid #400000; z-index: 7; }
+.attack-effect { background-color: rgba(255, 0, 0, 0.5); z-index: 11; }
+
+/* --- UI --- */
 #ui-layer {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none; /* UI가 게임 조작을 방해하지 않도록 함 */
+    pointer-events: none;
 }
 
 #status-window {
@@ -103,187 +158,34 @@ body {
     left: 20px;
     background-color: rgba(0, 0, 0, 0.6);
     border: 1px solid #99ddff;
-    border-radius: 8px;
     padding: 10px 15px;
     color: #ddeeff;
-    pointer-events: all; /* 창 자체는 클릭 가능하도록 */
-}
-#status-window h3 {
-    margin: 0 0 10px 0;
-    color: #99ddff;
-    border-bottom: 1px solid #66aaff;
-    padding-bottom: 5px;
-    font-size: 1rem;
-}
-#status-window p {
-    margin: 5px 0;
-    font-size: 0.9rem;
+    pointer-events: all;
+    border-radius: 15px;
 }
 
-
-
-/* --- 잡초 스타일 --- */
-.grass {
-    position: absolute;
-    font-size: 25px; /* 크기 줄임 */
-    font-weight: bold;
-    color: #6B8E23; /* 배경보다 약간 밝은 녹색 */
-    user-select: none; /* 드래그 선택 방지 */
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.4); /* 입체감 */
-}
-
-/* --- 마을 집 스타일 (개선) --- */
-.house {
-    position: absolute;
-    z-index: 5; /* 플레이어(10)보다 낮고, 잡초보다 높게 */
-}
-
-.house .wall {
-    width: 150px;  /* 크기 증가 */
-    height: 120px; /* 크기 증가 */
-    background: linear-gradient(to bottom, #D2B48C, #A0522D); /* 나무 질감 */
-    border: 4px solid #5C4033; /* 짙은 갈색 테두리 */
-    border-radius: 5px;
-    position: relative; /* 자식 요소(문, 창문)의 기준점 */
-    box-shadow: 5px 5px 10px rgba(0,0,0,0.5); /* 입체감을 위한 그림자 */
-}
-
-.house .roof {
-    width: 180px; /* 지붕 너비 증가 */
-    height: 80px; /* 지붕 높이 */
-    background: #8B0000; /* 어두운 빨간색 */
-    position: absolute;
-    top: -70px; /* 벽 위로 이동 */
-    left: -15px;
-    border-top-left-radius: 15px;
-    border-top-right-radius: 15px;
-    border: 4px solid #5C4033;
-    clip-path: polygon(0% 100%, 0% 20%, 50% 0%, 100% 20%, 100% 100%); /* 지붕 모양 */
-}
-
-.house .door {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 60px;
-    background-color: #654321;
-    border: 2px solid #432109;
-    border-radius: 5px 5px 0 0;
-}
-
-.house .door::after { /* 문고리 */
-    content: '';
-    position: absolute;
-    top: 50%;
-    right: 5px;
-    width: 5px;
-    height: 5px;
-    background-color: #FFD700; /* 금색 */
-    border-radius: 50%;
-}
-
-.house .window {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    width: 35px;
-    height: 35px;
-    background-color: #87CEEB; /* 하늘색 */
-    border: 2px solid #432109;
-}
-
-.house .window.right {
-    left: auto;
-    right: 20px;
-}
-
-.house .window::before, .house .window::after { /* 창살 */
-    content: '';
-    position: absolute;
-    background-color: #432109;
-}
-.house .window::before { /* 가로 창살 */
-    top: 50%;
-    left: 0;
+.health-bar-container, .xp-bar-container {
     width: 100%;
-    height: 2px;
-    transform: translateY(-50%);
+    height: 10px;
+    background-color: #555;
+    border: 1px solid #000;
+    margin-top: 5px;
+    border-radius: 5px;
+    overflow: hidden;
 }
-.house .window::after { /* 세로 창살 */
-    top: 0;
-    left: 50%;
-    width: 2px;
+.health-bar {
     height: 100%;
-    transform: translateX(-50%);
+    background-color: #00FF00;
+    transition: width 0.2s linear;
 }
+.xp-bar {
+    height: 100%;
+    background-color: #FFD700;
+    transition: width 0.2s linear;
+}
+.monster .health-bar-container { position: absolute; top: -15px; width: 100%; height: 5px; }
+.monster .health-bar { background-color: #FF0000; }
 
-/* --- NPC 스타일 --- */
-.npc {
-    position: absolute;
-    width: 28px;
-    height: 28px;
-    background-color: #DAA520; /* GoldenRod - 기본 색상, JS에서 덮어씀 */
-    border: 2px solid #614b0f;
-    /* border-radius: 50%; */ /* 원형 모양 제거 -> 사각형 */
-    z-index: 6; /* 집(5)보다 높고, 플레이어(10)보다 높게 */
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    transition: transform 0.1s linear; /* 부드러운 움직임 */
-}
-
-/* --- 상점 스타일 --- */
-.shop {
-    position: absolute;
-    z-index: 5;
-}
-.shop .wall {
-    width: 220px;
-    height: 150px;
-    background: linear-gradient(to bottom, #e0c4a0, #b88a6d); /* 더 밝은 나무 */
-    border: 4px solid #5C4033;
-    border-radius: 5px;
-    box-shadow: 5px 5px 10px rgba(0,0,0,0.5);
-}
-.shop .roof {
-    width: 250px;
-    height: 60px;
-    background: #006400; /* 짙은 녹색 지붕 */
-    position: absolute;
-    top: -30px;
-    left: -15px;
-    border-radius: 5px;
-    border: 4px solid #5C4033;
-}
-.shop .sign {
-    position: absolute;
-    top: 50px;
-    left: -30px;
-    width: 30px;
-    height: 50px;
-    background-color: #8B4513;
-    border: 2px solid #4a250a;
-    writing-mode: vertical-rl;
-    text-orientation: upright;
-    text-align: center;
-    font-size: 18px;
-    font-weight: bold;
-    color: #FFD700;
-    padding-top: 5px;
-}
-
-/* --- 상점 주인 스타일 --- */
-.shopkeeper {
-    position: absolute;
-    width: 32px;
-    height: 32px;
-    background-color: #4682B4; /* SteelBlue */
-    border: 2px solid #2a4d6b;
-    z-index: 6;
-    box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-}
-
-/* --- 상점 창 스타일 --- */
 #shop-window {
     position: absolute;
     top: 50%;
@@ -292,159 +194,15 @@ body {
     width: 400px;
     background-color: rgba(0, 0, 0, 0.8);
     border: 2px solid #99ddff;
-    border-radius: 10px;
-    z-index: 20; /* 최상단에 표시 */
-    color: #ddeeff;
+    z-index: 20;
     padding: 20px;
-    box-shadow: 0 0 15px rgba(153, 221, 255, 0.5);
     pointer-events: all;
+    border-radius: 15px;
 }
-#shop-window h2 {
-    text-align: center;
-    margin-top: 0;
-    color: #99ddff;
-    border-bottom: 1px solid #66aaff;
-    padding-bottom: 10px;
-}
-#item-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    max-height: 200px;
-    overflow-y: auto;
-}
-#item-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #334;
-}
-#item-list li:hover {
-    background-color: rgba(153, 221, 255, 0.1);
-}
-#item-list .item-price {
-    color: #FFD700;
-    font-weight: bold;
-}
-#item-list button {
-    background-color: #4682B4;
-    color: white;
-    border: 1px solid #99ddff;
-    border-radius: 5px;
-    padding: 5px 10px;
-    cursor: pointer;
-}
-#item-list button:hover {
-    background-color: #5a9cdb;
-}
-#shop-footer {
-    margin-top: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-#close-shop-button {
-    background-color: #A52A2A;
-    color: white;
-    border: 1px solid #ff9999;
-    border-radius: 5px;
-    padding: 10px 20px;
-    cursor: pointer;
-}
-#close-shop-button:hover {
-    background-color: #c44e4e;
-}
-
-/* --- 사냥터 스타일 --- */
-.hunting-ground {
-    position: absolute;
-    background-color: #4a5d23; /* 마을보다 어두운 녹색 */
-    z-index: -1; /* 다른 요소들 뒤에 위치 */
-}
-
-/* --- 몬스터 스타일 --- */
-.monster {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    background-color: #8B0000; /* 어두운 빨강 */
-    border: 2px solid #400000;
-    /* border-radius: 50%; */ /* 원형 -> 사각형으로 변경 */
-    z-index: 7; /* NPC보다 앞에 위치 */
-}
-
-/* --- 체력바 스타일 --- */
-.health-bar-container {
-    width: 100%;
-    height: 10px;
-    background-color: #555;
-    border: 1px solid #000;
-    border-radius: 3px;
-    margin-top: 5px;
-}
-
-.health-bar {
-    height: 100%;
-    background-color: #00FF00; /* 녹색 */
-    border-radius: 2px;
-    transition: width 0.2s linear;
-}
-
-.monster .health-bar-container {
-    position: absolute;
-    top: -15px; /* 몬스터 위에 표시 */
-    width: 100%;
-    height: 5px;
-}
-.monster .health-bar {
-    background-color: #FF0000; /* 빨간색 */
-}
-
-/* --- 공격 효과 스타일 --- */
-.attack-effect {
-    position: absolute;
-    background-color: rgba(255, 0, 0, 0.5); /* 반투명 빨강 */
-    z-index: 11; /* 플레이어보다 앞에 표시 */
-}
-
-/* --- 게임 오버 화면 스타일 --- */
-#game-over-screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 30; /* 최상단에 표시 */
-    pointer-events: all;
-}
-
-#game-over-screen h1 {
-    font-family: 'Do Hyeon', sans-serif;
-    font-size: 6rem;
-    color: #DC143C; /* Crimson */
-    text-shadow: 0 0 10px #ff0000;
-}
-
-#restart-button {
-    font-family: 'Do Hyeon', sans-serif;
-    font-size: 2rem;
-    color: #ddeeff;
-    background-color: transparent;
-    border: 2px solid #ddeeff;
-    padding: 15px 40px;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-#restart-button:hover {
-    background-color: #ddeeff;
-    color: #000;
-}
+#shop-window h2 { text-align: center; margin-top: 0; color: #99ddff; }
+#item-list { list-style: none; padding: 0; margin: 0; }
+#item-list li { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #334; }
+#item-list button { background-color: #4682B4; color: white; border: 1px solid #99ddff; cursor: pointer; border-radius: 8px; padding: 5px 10px; }
+#item-list button:disabled { background-color: #555; cursor: not-allowed; }
+#shop-footer { margin-top: 20px; display: flex; justify-content: space-between; }
+#close-shop-button { background-color: #A52A2A; color: white; border: 1px solid #ff9999; cursor: pointer; border-radius: 8px; padding: 10px 20px; }
