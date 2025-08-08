@@ -48,6 +48,7 @@ function startGame() {
     const projectiles = [];
     let shopkeeper;
     let jobChanger;
+    let jobResetter;
 
     const player = {
         element: playerEl,
@@ -165,6 +166,13 @@ function startGame() {
         jobChangerEl.style.top = '1400px';
         backgroundLayer.appendChild(jobChangerEl);
         jobChanger = { element: jobChangerEl };
+
+        const jobResetterEl = document.createElement('div');
+        jobResetterEl.className = 'job-resetter';
+        jobResetterEl.style.left = '1710px'; // 중앙 위쪽 집 앞
+        jobResetterEl.style.top = '1400px';  // 중앙 위쪽 집 앞
+        backgroundLayer.appendChild(jobResetterEl);
+        jobResetter = { element: jobResetterEl };
 
         const area = { x: 2000, y: 500, width: 1000, height: 2000 };
         const ground = document.createElement('div');
@@ -594,11 +602,37 @@ function startGame() {
             if (isColliding(player.element, jobChanger.element)) {
                 changeJob();
             }
+            if (jobResetter && isColliding(player.element, jobResetter.element)) {
+                resetJob();
+            }
         }
         if (key === 'e') { // 'E' 키로 장착
             equipWeapon();
         }
     });
+
+    function resetJob() {
+        if (player.job === '없음') {
+            alert("초기화할 직업이 없습니다.");
+            return;
+        }
+
+        if (player.gold < 1000) {
+            alert("골드가 부족합니다. (1000 G 필요)");
+            return;
+        }
+
+        if (confirm(`1000 골드를 사용하여 ${player.job} 직업을 초기화하시겠습니까?`)) {
+            player.gold -= 1000;
+            player.job = '없음';
+            player.equippedWeapon = null;
+            updateAttackPower();
+            updatePlayerVisuals();
+            alert("직업이 초기화되었습니다.");
+            savePlayerData();
+            updateUI();
+        }
+    }
 
     document.addEventListener('keyup', (event) => {
         keysPressed[event.key.toLowerCase()] = false;

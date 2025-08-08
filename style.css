@@ -139,6 +139,7 @@ body {
 
 .shopkeeper { width: 32px; height: 32px; background-color: #4682B4; border: 2px solid #2a4d6b; z-index: 6; }
 .job-changer { width: 32px; height: 32px; background-color: #8A2BE2; border: 2px solid #4B0082; z-index: 6; border-radius: 50%; }
+.job-resetter { position: absolute; width: 32px; height: 32px; background-color: #f0f0f0; border: 2px solid #aaa; z-index: 6; border-radius: 50%; }
 .monster { width: 30px; height: 30px; background-color: #8B0000; border: 2px solid #400000; z-index: 7; }
 .attack-effect { background-color: rgba(255, 0, 0, 0.5); z-index: 11; }
 
