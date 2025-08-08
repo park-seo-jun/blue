@@ -52,6 +52,7 @@ function startGame() {
     let jobChanger;
     let jobResetter;
     let levelResetter;
+    let skillMaster;
 
     const player = {
         element: playerEl,
@@ -70,6 +71,17 @@ function startGame() {
         xpToNextLevel: 100,
         job: '없음',
         equippedWeapon: null,
+        skills: [],
+        skillCooldowns: {},
+    };
+
+    const skillsData = {
+        '강타': { job: '전사', cost: 500, damage: 2.5, cooldown: 3000, description: '전방의 적에게 강력한 일격을 날립니다.' },
+        '파워샷': { job: '궁수', cost: 500, damage: 2.0, cooldown: 2000, description: '강화된 화살을 발사합니다.' },
+        '파이어볼': { job: '마법사', cost: 500, damage: 3.0, cooldown: 4000, description: '화염구를 날려 적을 공격합니다.' },
+        '발도술': { job: '검사', cost: 500, damage: 3.5, cooldown: 5000, description: '순간적으로 넓은 범위를 벱니다.' },
+        '퀵샷': { job: '건슬링어', cost: 500, damage: 1.8, cooldown: 1500, description: '빠르게 총을 발사합니다.' },
+        '마나 슬래시': { job: '마검사', cost: 500, damage: 4.0, cooldown: 6000, description: '마나가 담긴 검기를 날립니다.' },
     };
 
     function savePlayerData() {
@@ -83,6 +95,7 @@ function startGame() {
             maxHp: player.maxHp,
             baseAttackPower: player.baseAttackPower,
             job: player.job,
+            skills: player.skills,
         };
         localStorage.setItem('rpgPlayerData', JSON.stringify(playerData));
     }
@@ -100,6 +113,7 @@ function startGame() {
             player.maxHp = playerData.maxHp;
             player.baseAttackPower = playerData.baseAttackPower;
             player.job = playerData.job;
+            player.skills = playerData.skills || [];
             
             player.hp = player.maxHp; // 부활 시 체력은 최대로
             updateAttackPower();
@@ -186,6 +200,13 @@ function startGame() {
         backgroundLayer.appendChild(levelResetterEl);
         levelResetter = { element: levelResetterEl };
 
+        const skillMasterEl = document.createElement('div');
+        skillMasterEl.className = 'skill-master';
+        skillMasterEl.style.left = '1300px';
+        skillMasterEl.style.top = '1550px';
+        backgroundLayer.appendChild(skillMasterEl);
+        skillMaster = { element: skillMasterEl };
+
         for (let i = 0; i < 4; i++) {
             createNpc();
         }
@@ -234,7 +255,6 @@ function startGame() {
         const npcEl = document.createElement('div');
         npcEl.className = 'npc';
         
-        // 마을 중앙을 기준으로 NPC 생성
         const villageArea = { x: 1000, y: 1100, width: 900, height: 800 };
 
         const npc = {
@@ -242,8 +262,8 @@ function startGame() {
             x: villageArea.x + Math.random() * (villageArea.width - 30),
             y: villageArea.y + Math.random() * (villageArea.height - 30),
             width: 30, height: 30,
-            moveTimer: Math.random() * 200, // 초기 타이머
-            moveInterval: 100 + Math.random() * 200, // 1~3초마다 움직임
+            moveTimer: Math.random() * 200,
+            moveInterval: 100 + Math.random() * 200,
             speed: 1,
             direction: null,
         };
@@ -254,7 +274,7 @@ function startGame() {
         backgroundLayer.appendChild(npc.element); 
 
         let isCollidingOnSpawn = false;
-        const thingsToAvoid = [...obstacles, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, ...npcs.map(n => n.element)];
+        const thingsToAvoid = [...obstacles, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, ...npcs.map(n => n.element)];
 
         for(const thing of thingsToAvoid) {
             if (thing && isColliding(npc.element, thing)) {
@@ -265,7 +285,7 @@ function startGame() {
 
         if (isCollidingOnSpawn) {
             npc.element.remove();
-            createNpc(); // 충돌 시 다시 생성
+            createNpc();
             return;
         }
 
@@ -288,7 +308,7 @@ function startGame() {
             levelUp();
         }
         updateUI();
-        savePlayerData(); // 경험치 및 레벨 변경사항 저장
+        savePlayerData();
     }
 
     function levelUp() {
@@ -297,7 +317,7 @@ function startGame() {
         player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.5);
         player.maxHp += 20;
         player.hp = player.maxHp;
-        player.baseAttackPower += 2; // 레벨업 시 기본 공격력도 소폭 상승
+        player.baseAttackPower += 2;
         updateAttackPower();
         player.element.style.filter = 'brightness(3)';
         setTimeout(() => { player.element.style.filter = 'brightness(1)'; }, 200);
@@ -310,17 +330,11 @@ function startGame() {
     }
 
     function updatePlayerVisuals() {
-        // 기존 무기 및 검집 제거
         const existingWeapon = player.element.querySelector('.player-weapon');
-        if (existingWeapon) {
-            existingWeapon.remove();
-        }
+        if (existingWeapon) existingWeapon.remove();
         const existingSheath = player.element.querySelector('.katana-sheath');
-        if (existingSheath) {
-            existingSheath.remove();
-        }
+        if (existingSheath) existingSheath.remove();
 
-        // 새 무기 추가
         if (player.equippedWeapon) {
             const weaponEl = document.createElement('div');
             weaponEl.className = `player-weapon ${player.equippedWeapon.type}`;
@@ -336,7 +350,6 @@ function startGame() {
             
             player.element.appendChild(weaponEl);
 
-            // 검사 + 카타나 조합일 때 검집 추가
             if (player.job === '검사' && player.equippedWeapon.type === 'katana') {
                 const sheathEl = document.createElement('div');
                 sheathEl.className = 'katana-sheath';
@@ -346,11 +359,10 @@ function startGame() {
     }
 
     function equipWeapon() {
-        // 인벤토리에서 장착 가능한 가장 좋은 무기를 찾음
         let bestWeapon = null;
         for (const itemName of player.inventory) {
             const item = shopItems.find(shopItem => shopItem.name === itemName);
-            if (item && item.power) { // 무기인 경우
+            if (item && item.power) {
                 if (!bestWeapon || item.power > bestWeapon.power) {
                     bestWeapon = item;
                 }
@@ -371,11 +383,9 @@ function startGame() {
     function playerAttack() {
         if (player.isAttacking) return;
 
-        // 직업에 따라 공격 방식 분기
         if (player.job === '건슬링어' || player.job === '마법사' || player.job === '궁수') {
             fireProjectile();
         } else {
-            // 근접 공격 (전사, 암살자, 없음)
             player.isAttacking = true;
             
             let attackRange = 50;
@@ -383,7 +393,7 @@ function startGame() {
             attackEffect.className = 'attack-effect';
 
             if (player.job === '검사') {
-                attackRange = 70; // 검사는 리치가 약간 더 김
+                attackRange = 70;
                 attackEffect.classList.add('slash');
             }
             
@@ -425,37 +435,156 @@ function startGame() {
         }
     }
 
-    function fireProjectile() {
+    function fireProjectile(skillName = null) {
         player.isAttacking = true;
 
         const projectileEl = document.createElement('div');
         projectileEl.className = 'projectile';
-        if (player.job === '건슬링어') {
-            projectileEl.classList.add('bullet');
-        } else if (player.job === '마법사') {
-            projectileEl.classList.add('magic-missile');
-        } else if (player.job === '궁수') {
-            projectileEl.classList.add('arrow');
+        
+        let projectileType = '';
+        let speed = 8;
+        let range = 300;
+        let damage = player.attackPower;
+
+        if (skillName) {
+            const skill = skillsData[skillName];
+            damage *= skill.damage;
+            if (skillName === '파이어볼') projectileType = 'fireball';
+            if (skillName === '파워샷') projectileType = 'power-shot';
+            if (skillName === '퀵샷') projectileType = 'quick-shot';
+            if (skillName === '마나 슬래시') projectileType = 'mana-slash';
+        } else {
+            if (player.job === '건슬링어') projectileType = 'bullet';
+            else if (player.job === '마법사') projectileType = 'magic-missile';
+            else if (player.job === '궁수') projectileType = 'arrow';
         }
+        
+        if(projectileType) projectileEl.classList.add(projectileType);
 
         const projectile = {
             element: projectileEl,
-            x: player.x + player.width / 2 - 5, // 중앙에서 발사
+            x: player.x + player.width / 2 - 5,
             y: player.y + player.height / 2 - 5,
             direction: player.direction,
-            speed: 8,
-            range: 300, // 사정거리
+            speed: speed,
+            range: range,
             traveled: 0,
+            damage: damage,
         };
 
         projectiles.push(projectile);
         backgroundLayer.appendChild(projectileEl);
 
-        // 공격 딜레이
         setTimeout(() => {
             player.isAttacking = false;
         }, 500);
     }
+
+    // --- 스킬 관련 함수 ---
+    function learnSkill() {
+        const availableSkill = Object.entries(skillsData).find(([name, data]) => data.job === player.job);
+
+        if (!availableSkill) {
+            alert("이 직업은 배울 수 있는 스킬이 없습니다.");
+            return;
+        }
+
+        const [skillName, skillInfo] = availableSkill;
+
+        if (player.skills.includes(skillName)) {
+            alert(`이미 '${skillName}' 스킬을 배웠습니다.`);
+            return;
+        }
+
+        if (player.gold < skillInfo.cost) {
+            alert(`골드가 부족합니다. (${skillInfo.cost} G 필요)`);
+            return;
+        }
+
+        if (confirm(`'${skillName}' 스킬을 배우시겠습니까?
+
+${skillInfo.description}
+가격: ${skillInfo.cost} G`)) {
+            player.gold -= skillInfo.cost;
+            player.skills.push(skillName);
+            alert(`'${skillName}' 스킬을 배웠습니다!`);
+            savePlayerData();
+            updateUI();
+        }
+    }
+
+    function useSkill() {
+        if (player.skills.length === 0) return;
+        const skillName = player.skills[0]; // 현재는 스킬 1개만 가정
+        const skillInfo = skillsData[skillName];
+
+        const now = Date.now();
+        const lastUsed = player.skillCooldowns[skillName] || 0;
+
+        if (now - lastUsed < skillInfo.cooldown) {
+            // alert("스킬 쿨타임입니다.");
+            return;
+        }
+        
+        player.skillCooldowns[skillName] = now;
+
+        switch (skillName) {
+            case '강타':
+            case '발도술':
+                player.isAttacking = true;
+                const attackEffect = document.createElement('div');
+                attackEffect.className = `attack-effect ${skillName.toLowerCase()}-effect`;
+                
+                const playerRect = player.element.getBoundingClientRect();
+                const range = skillName === '발도술' ? 120 : 80;
+                const duration = skillName === '발도술' ? 300 : 200;
+
+                let hitboxRect = { top: playerRect.top - range/2, left: playerRect.left - range/2, width: playerRect.width + range, height: playerRect.height + range };
+                if (skillName === '강타') {
+                     if (player.direction === 'w') hitboxRect = { top: playerRect.top - range, left: playerRect.left, width: playerRect.width, height: range };
+                     else if (player.direction === 's') hitboxRect = { top: playerRect.bottom, left: playerRect.left, width: playerRect.width, height: range };
+                     else if (player.direction === 'a') hitboxRect = { top: playerRect.top, left: playerRect.left - range, width: range, height: playerRect.height };
+                     else if (player.direction === 'd') hitboxRect = { top: playerRect.top, left: playerRect.right, width: range, height: playerRect.height };
+                }
+
+                const backgroundRect = backgroundLayer.getBoundingClientRect();
+                attackEffect.style.left = `${hitboxRect.left - backgroundRect.left}px`;
+                attackEffect.style.top = `${hitboxRect.top - backgroundRect.top}px`;
+                attackEffect.style.width = `${hitboxRect.width}px`;
+                attackEffect.style.height = `${hitboxRect.height}px`;
+                backgroundLayer.appendChild(attackEffect);
+
+                for (let i = monsters.length - 1; i >= 0; i--) {
+                    const monster = monsters[i];
+                    if (isColliding(attackEffect, monster.element)) {
+                        monster.hp -= player.attackPower * skillInfo.damage;
+                        if (monster.hp <= 0) {
+                            gainXp(monster.xpValue);
+                            player.gold += 30;
+                            monster.element.remove();
+                            monsters.splice(i, 1);
+                            respawnMonster();
+                        } else {
+                            monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
+                        }
+                    }
+                }
+
+                setTimeout(() => {
+                    attackEffect.remove();
+                    player.isAttacking = false;
+                }, duration);
+                break;
+            
+            case '파이어볼':
+            case '파워샷':
+            case '퀵샷':
+            case '마나 슬래시':
+                fireProjectile(skillName);
+                break;
+        }
+    }
+
 
     // --- 상점 및 전직 관련 함수 ---
     function changeJob() {
@@ -492,7 +621,6 @@ function startGame() {
             
             const button = li.querySelector('button');
             let canBuy = false;
-            // 전직 전에는 포션만 구매 가능하도록 수정
             if (player.job === '없음') {
                 canBuy = item.type === 'potion';
             } else {
@@ -565,15 +693,11 @@ function startGame() {
         if (keysPressed['d']) { moveX = playerSpeed; player.direction = 'd'; }
 
         if (moveX !== 0 || moveY !== 0) {
-            // 1. 먼저 플레이어의 논리적 위치를 이동시킵니다.
             player.x += moveX;
             player.y += moveY;
-
-            // 2. 이동한 위치를 기준으로 플레이어 DOM 요소의 위치를 업데이트합니다.
             player.element.style.left = `${player.x}px`;
             player.element.style.top = `${player.y}px`;
 
-            // 3. 화면에 그려진 DOM 요소를 기준으로 충돌을 확인합니다.
             let isCollidingWithObstacle = false;
             for (const obstacle of obstacles) {
                 if (isColliding(player.element, obstacle)) {
@@ -582,25 +706,22 @@ function startGame() {
                 }
             }
 
-            // 4. 만약 충돌했다면, 논리적 위치를 다시 원래대로 되돌립니다.
             if (isCollidingWithObstacle) {
                 player.x -= moveX;
                 player.y -= moveY;
             }
             
-            // 5. 최종 위치를 다시 DOM 요소에 반영합니다.
             player.element.style.left = `${player.x}px`;
             player.element.style.top = `${player.y}px`;
         }
 
-        // NPC AI: 무작위 이동
         for (const npc of npcs) {
             npc.moveTimer++;
             if (npc.moveTimer > npc.moveInterval) {
-                const directions = ['w', 's', 'a', 'd', null, null, null]; // 멈출 확률을 높임
+                const directions = ['w', 's', 'a', 'd', null, null, null];
                 npc.direction = directions[Math.floor(Math.random() * directions.length)];
                 npc.moveTimer = 0;
-                npc.moveInterval = 100 + Math.random() * 200; // 1~3초 간격
+                npc.moveInterval = 100 + Math.random() * 200;
             }
 
             let moveX = 0;
@@ -619,16 +740,8 @@ function startGame() {
                 npc.element.style.left = `${npc.x}px`;
                 npc.element.style.top = `${npc.y}px`;
 
-                // 충돌 감지 (장애물, 다른 NPC, 플레이어, 주요 NPC)
                 let isCollidingWithSomething = false;
-                const collidables = [
-                    ...obstacles, 
-                    player.element, 
-                    shopkeeper.element, 
-                    jobChanger.element, 
-                    jobResetter.element, 
-                    levelResetter.element
-                ];
+                const collidables = [ ...obstacles, player.element, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element ];
 
                 for (const item of collidables) {
                     if (item && isColliding(npc.element, item)) {
@@ -651,20 +764,18 @@ function startGame() {
                     npc.y = originalY;
                     npc.element.style.left = `${npc.x}px`;
                     npc.element.style.top = `${npc.y}px`;
-                    npc.direction = null; // 이동 중지
+                    npc.direction = null;
                 }
             }
         }
 
-        // 몬스터 AI: 플레이어 추적
-        const aggroRange = 250; // 몬스터가 플레이어를 인지하는 범위
+        const aggroRange = 250;
         for (const monster of monsters) {
             const dx = player.x - monster.x;
             const dy = player.y - monster.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
             if (distance < aggroRange) {
-                // 플레이어 방향으로 이동
                 const angle = Math.atan2(dy, dx);
                 monster.x += Math.cos(angle) * monster.speed;
                 monster.y += Math.sin(angle) * monster.speed;
@@ -673,7 +784,6 @@ function startGame() {
             }
         }
 
-        // 투사체 업데이트
         for (let i = projectiles.length - 1; i >= 0; i--) {
             const p = projectiles[i];
             let moveX = 0;
@@ -691,18 +801,16 @@ function startGame() {
             p.element.style.left = `${p.x}px`;
             p.element.style.top = `${p.y}px`;
 
-            // 사정거리 체크
             if (p.traveled >= p.range) {
                 p.element.remove();
                 projectiles.splice(i, 1);
                 continue;
             }
 
-            // 몬스터와 충돌 체크
             for (let j = monsters.length - 1; j >= 0; j--) {
                 const monster = monsters[j];
                 if (isColliding(p.element, monster.element)) {
-                    monster.hp -= player.attackPower;
+                    monster.hp -= p.damage;
                     p.element.remove();
                     projectiles.splice(i, 1);
 
@@ -715,7 +823,7 @@ function startGame() {
                     } else {
                         monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
                     }
-                    break; // 투사체는 하나의 몬스터만 맞춤
+                    break;
                 }
             }
         }
@@ -764,12 +872,18 @@ function startGame() {
             if (levelResetter && isColliding(player.element, levelResetter.element)) {
                 resetLevel();
             }
+            if (skillMaster && isColliding(player.element, skillMaster.element)) {
+                learnSkill();
+            }
         }
-        if (key === 'e') { // 'E' 키로 장착
+        if (key === 'e') {
             equipWeapon();
         }
-        if (key === 'q') { // 'Q' 키로 포션 사용
+        if (key === 'q') {
             usePotion();
+        }
+        if (key === '1') {
+            useSkill();
         }
     });
 
@@ -786,8 +900,8 @@ function startGame() {
             return;
         }
 
-        player.inventory.splice(potionIndex, 1); // 인벤토리에서 포션 하나 제거
-        player.hp = Math.min(player.maxHp, player.hp + 30); // 30만큼 회복, 최대 HP 초과 방지
+        player.inventory.splice(potionIndex, 1);
+        player.hp = Math.min(player.maxHp, player.hp + 30);
 
         alert("HP 포션을 사용하여 30의 체력을 회복했습니다!");
         updateUI();
@@ -816,6 +930,7 @@ function startGame() {
             player.job = '없음';
             player.inventory = [];
             player.equippedWeapon = null;
+            player.skills = [];
             
             updateAttackPower();
             updatePlayerVisuals();
@@ -841,6 +956,7 @@ function startGame() {
             player.job = '없음';
             player.inventory = [];
             player.equippedWeapon = null;
+            player.skills = [];
             updateAttackPower();
             updatePlayerVisuals();
             alert("직업과 소지품이 초기화되었습니다.");
