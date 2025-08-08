@@ -90,12 +90,20 @@ function startGame() {
     };
 
     const skillsData = {
-        '강타': { job: '전사', cost: 500, damage: 2.5, cooldown: 3000, description: '전방의 적에게 강력한 일격을 날립니다.' },
-        '파워샷': { job: '궁수', cost: 500, damage: 2.0, cooldown: 2000, description: '강화된 화살을 발사합니다.' },
-        '파이어볼': { job: '마법사', cost: 500, damage: 3.0, cooldown: 4000, description: '화염구를 날려 적을 공격합니다.' },
-        '발도술': { job: '검사', cost: 500, damage: 3.5, cooldown: 5000, description: '순간적으로 전방을 빠르게 벱니다.' },
-        '퀵샷': { job: '건슬링어', cost: 500, damage: 1.8, cooldown: 1500, description: '빠르게 총을 발사합니다.' },
-        '마나 슬래시': { job: '마검사', cost: 500, damage: 4.0, cooldown: 6000, description: '마나가 담긴 검기를 날립니다.' },
+        // Tier 1
+        '강타': { job: '전사', cost: 500, damage: 2.5, cooldown: 3000, description: '전방의 적에게 강력한 일격을 날립니다.', tier: 1 },
+        '파워샷': { job: '궁수', cost: 500, damage: 2.0, cooldown: 2000, description: '강화된 화살을 발사합니다.', tier: 1 },
+        '파이어볼': { job: '마법사', cost: 500, damage: 3.0, cooldown: 4000, description: '화염구를 날려 적을 공격합니다.', tier: 1 },
+        '발도술': { job: '검사', cost: 500, damage: 3.5, cooldown: 5000, description: '순간적으로 전방을 빠르게 벱니다.', tier: 1 },
+        '퀵샷': { job: '건슬링어', cost: 500, damage: 1.8, cooldown: 1500, description: '빠르게 총을 발사합니다.', tier: 1 },
+        '마나 슬래시': { job: '마검사', cost: 500, damage: 4.0, cooldown: 6000, description: '마나가 담긴 검기를 날립니다.', tier: 1 },
+        // Tier 2
+        '약점 찌르기': { job: '전사', cost: 1, damage: 1.5, cooldown: 5000, description: '적의 약점을 찔러 5초간 방어력을 감소시킵니다.', tier: 2, effect: 'defense_down', duration: 5000 },
+        '속박의 화살': { job: '궁수', cost: 1, damage: 1.2, cooldown: 7000, description: '적을 3초간 이동 불가 상태로 만듭니다.', tier: 2, effect: 'bind', duration: 3000 },
+        '라이트닝': { job: '마법사', cost: 1, damage: 5.0, cooldown: 8000, description: '강력한 번개를 소환하여 주변의 적들을 공격합니다.', tier: 2, area: 150 },
+        '차지 슬래셔': { job: '검사', cost: 1, damage: 6.0, cooldown: 10000, description: '기를 모아 전방으로 강력한 참격을 날립니다.', tier: 2, range: 200 },
+        '빠른 연사': { job: '건슬링어', cost: 1, damage: 1.0, cooldown: 6000, description: '3발의 총알을 빠르게 연사합니다.', tier: 2, shots: 3, interval: 200 },
+        '마력 폭발': { job: '마검사', cost: 1, damage: 7.0, cooldown: 12000, description: '자신 주변으로 마력을 폭발시켜 모든 적에게 피해를 줍니다.', tier: 2, area: 200 },
     };
     
     const dialogueData = {
@@ -104,7 +112,7 @@ function startGame() {
         'skillMaster': { name: '스킬 마스터', lines: ["기술이야말로 자신을 지키는 최고의 무기지.", "자네의 직업에 맞는 기술을 알려줄 수 있네."], action: { text: '스킬 배우기', handler: learnSkill } },
         'jobResetter': { name: '망각의 현자', lines: ["과거의 선택을 후회하는가...?", "새로운 시작에는 대가가 따르는 법."], action: { text: '직업 초기화', handler: resetJob } },
         'levelResetter': { name: '윤회의 석공', lines: ["그대의 여정은 너무 멀리 와버렸군.", "처음의 열정을 되찾고 싶다면 나를 찾아오게."], action: { text: '레벨 초기화', handler: resetLevel } },
-        'questGiver': { name: '모험가 길드장', lines: ["마을 근처의 슬라임들 때문에 주민들이 불안에 떨고 있네. 자네가 좀 처리해주지 않겠나?"], },
+        'questGiver': { name: '모험가 길드장', lines: ["마을을 위해 힘써줄 모험가를 찾고 있네.", "자네, 모험에 관심 있나?"] },
         'npc': { name: '마을 주민', lines: ["요즘 몬스터들 때문에 걱정이 이만저만이 아니에요.", "저기 사냥터 쪽으로는 가지 않는 게 좋을 거예요.", "전설에 따르면 이 땅 어딘가에 푸른 보석이 잠들어 있대요."] }
     };
 
@@ -149,8 +157,12 @@ function startGame() {
 
     function createWorld() {
         const housePositions = [
-            { x: 1650, y: 1250 }, { x: 1150, y: 1650 }, { x: 1650, y: 1650 },
-            { x: 1350, y: 1100 }, { x: 1850, y: 1500 }, { x: 1350, y: 1850 }
+            // 왼쪽 줄
+            { x: 1300, y: 1100 }, { x: 1300, y: 1350 }, { x: 1300, y: 1600 }, { x: 1300, y: 1850 },
+            // 오른쪽 줄
+            { x: 1700, y: 1100 }, { x: 1700, y: 1350 }, { x: 1700, y: 1600 }, { x: 1700, y: 1850 },
+            // 외곽 집
+            { x: 1050, y: 1250 }, { x: 1950, y: 1250 }
         ];
         housePositions.forEach(pos => {
             const house = document.createElement('div');
@@ -168,7 +180,7 @@ function startGame() {
         });
 
         const shopEl = document.createElement('div');
-        shopEl.className = 'shop'; shopEl.style.left = '1150px'; shopEl.style.top = '1250px';
+        shopEl.className = 'shop'; shopEl.style.left = '1475px'; shopEl.style.top = '950px';
         const wall = document.createElement('div'); wall.className = 'wall';
         const roof = document.createElement('div'); roof.className = 'roof';
         const sign = document.createElement('div'); sign.className = 'sign'; sign.textContent = '상점';
@@ -177,33 +189,73 @@ function startGame() {
         obstacles.push(shopEl);
 
         shopkeeper = { element: document.createElement('div'), type: 'shopkeeper' };
-        shopkeeper.element.className = 'shopkeeper'; shopkeeper.element.style.left = `${1150 + (250 / 2) - 16}px`; shopkeeper.element.style.top = `${1250 + 150}px`;
+        shopkeeper.element.className = 'shopkeeper';
+        shopkeeper.element.style.left = `${1475 + (250 / 2) - 16}px`;
+        shopkeeper.element.style.top = `${950 + 150}px`;
+        const shopkeeperNameTag = document.createElement('div');
+        shopkeeperNameTag.className = 'npc-name-tag';
+        shopkeeperNameTag.textContent = dialogueData.shopkeeper.name;
+        shopkeeper.element.appendChild(shopkeeperNameTag);
         backgroundLayer.appendChild(shopkeeper.element);
 
         jobChanger = { element: document.createElement('div'), type: 'jobChanger' };
-        jobChanger.element.className = 'job-changer'; jobChanger.element.style.left = '1500px'; jobChanger.element.style.top = '1500px';
+        jobChanger.element.className = 'job-changer';
+        jobChanger.element.style.left = '1250px'; 
+        jobChanger.element.style.top = '1160px';
+        const jobChangerNameTag = document.createElement('div');
+        jobChangerNameTag.className = 'npc-name-tag';
+        jobChangerNameTag.textContent = dialogueData.jobChanger.name;
+        jobChanger.element.appendChild(jobChangerNameTag);
         backgroundLayer.appendChild(jobChanger.element);
 
         skillMaster = { element: document.createElement('div'), type: 'skillMaster' };
-        skillMaster.element.className = 'skill-master'; skillMaster.element.style.left = '1550px'; skillMaster.element.style.top = '1500px';
+        skillMaster.element.className = 'skill-master';
+        skillMaster.element.style.left = '1880px';
+        skillMaster.element.style.top = '1160px';
+        const skillMasterNameTag = document.createElement('div');
+        skillMasterNameTag.className = 'npc-name-tag';
+        skillMasterNameTag.textContent = dialogueData.skillMaster.name;
+        skillMaster.element.appendChild(skillMasterNameTag);
         backgroundLayer.appendChild(skillMaster.element);
 
         jobResetter = { element: document.createElement('div'), type: 'jobResetter' };
-        jobResetter.element.className = 'job-resetter'; jobResetter.element.style.left = '1900px'; jobResetter.element.style.top = '1450px';
+        jobResetter.element.className = 'job-resetter';
+        jobResetter.element.style.left = '1970px';
+        jobResetter.element.style.top = '1450px';
+        const jobResetterNameTag = document.createElement('div');
+        jobResetterNameTag.className = 'npc-name-tag';
+        jobResetterNameTag.textContent = dialogueData.jobResetter.name;
+        jobResetter.element.appendChild(jobResetterNameTag);
         backgroundLayer.appendChild(jobResetter.element);
 
         levelResetter = { element: document.createElement('div'), type: 'levelResetter' };
-        levelResetter.element.className = 'level-resetter'; levelResetter.element.style.left = '1200px'; levelResetter.element.style.top = '1850px';
+        levelResetter.element.className = 'level-resetter';
+        levelResetter.element.style.left = '1100px';
+        levelResetter.element.style.top = '1850px';
+        const levelResetterNameTag = document.createElement('div');
+        levelResetterNameTag.className = 'npc-name-tag';
+        levelResetterNameTag.textContent = dialogueData.levelResetter.name;
+        levelResetter.element.appendChild(levelResetterNameTag);
         backgroundLayer.appendChild(levelResetter.element);
 
         questGiver = { element: document.createElement('div'), type: 'questGiver' };
-        questGiver.element.className = 'quest-giver'; questGiver.element.style.left = '1400px'; questGiver.element.style.top = '1650px';
+        questGiver.element.className = 'quest-giver';
+        questGiver.element.style.left = '1570px';
+        questGiver.element.style.top = '1170px';
+        const questGiverNameTag = document.createElement('div');
+        questGiverNameTag.className = 'npc-name-tag';
+        questGiverNameTag.textContent = dialogueData.questGiver.name;
+        questGiver.element.appendChild(questGiverNameTag);
         backgroundLayer.appendChild(questGiver.element);
 
         const pathSegments = [
-            { x: 1450, y: 1450, width: 150, height: 150 }, { x: 1500, y: 1600, width: 50, height: 200 },
-            { x: 1500, y: 1300, width: 50, height: 150 }, { x: 1250, y: 1500, width: 200, height: 50 },
-            { x: 1600, y: 1500, width: 200, height: 50 },
+            // Main Street
+            { x: 1475, y: 1050, width: 200, height: 1000 },
+            // Plaza in front of shop
+            { x: 1425, y: 1050, width: 300, height: 100 },
+            // Side paths to outer houses
+            { x: 1150, y: 1300, width: 325, height: 50 },
+            { x: 1675, y: 1300, width: 325, height: 50 },
         ];
         pathSegments.forEach(seg => {
             const pathEl = document.createElement('div');
@@ -213,14 +265,32 @@ function startGame() {
             backgroundLayer.appendChild(pathEl);
         });
 
+        const treePositions = [
+            // 마을 왼쪽 숲
+            { x: 1050, y: 1050 }, { x: 1150, y: 1150 }, { x: 1050, y: 1450 }, 
+            { x: 1150, y: 1550 }, { x: 1050, y: 1750 }, { x: 1150, y: 1850 },
+            // 마을 오른쪽 숲
+            { x: 1900, y: 1050 }, { x: 1800, y: 1150 }, { x: 1900, y: 1450 },
+            { x: 1800, y: 1550 }, { x: 1900, y: 1750 }, { x: 1800, y: 1850 },
+        ];
+        treePositions.forEach(pos => createTree(pos.x, pos.y));
+
         for (let i = 0; i < 4; i++) createNpc();
-        const area = { x: 2000, y: 500, width: 1000, height: 2000 };
+
+        // 기본 사냥터
+        const area = { x: 3000, y: 500, width: 1000, height: 2000 };
         for (let i = 0; i < 15; i++) createMonster(area);
         
         const fenceSegments = [
-            { x: area.x, y: area.y, width: 300, height: 20 },
-            { x: area.x + 400, y: area.y, width: area.width - 400, height: 20 },
+            // Top (with exit to harder area)
+            { x: area.x, y: area.y, width: (area.width / 2) - 50, height: 20 },
+            { x: area.x + (area.width / 2) + 50, y: area.y, width: (area.width / 2) - 50, height: 20 },
+            // Bottom
             { x: area.x, y: area.y + area.height - 20, width: area.width, height: 20 },
+            // Left (with entrance from village)
+            { x: area.x, y: area.y, width: 20, height: (area.height / 2) - 75 },
+            { x: area.x, y: area.y + (area.height / 2) + 75, width: 20, height: (area.height / 2) - 75 },
+            // Right
             { x: area.x + area.width - 20, y: area.y, width: 20, height: area.height },
         ];
         fenceSegments.forEach(seg => {
@@ -231,6 +301,49 @@ function startGame() {
             backgroundLayer.appendChild(fenceEl);
             obstacles.push(fenceEl);
         });
+
+        // 상급 사냥터
+        const harderArea = { x: 3000, y: -1600, width: 1000, height: 1500 };
+        for (let i = 0; i < 10; i++) createHarderMonster(harderArea);
+
+        const harderFenceSegments = [
+            // Top
+            { x: harderArea.x, y: harderArea.y, width: harderArea.width, height: 20 },
+            // Bottom (with entrance from normal area)
+            { x: harderArea.x, y: harderArea.y + harderArea.height - 20, width: (harderArea.width / 2) - 50, height: 20 },
+            { x: harderArea.x + (harderArea.width / 2) + 50, y: harderArea.y + harderArea.height - 20, width: (harderArea.width / 2) - 50, height: 20 },
+            // Left
+            { x: harderArea.x, y: harderArea.y, width: 20, height: harderArea.height },
+            // Right
+            { x: harderArea.x + harderArea.width - 20, y: harderArea.y, width: 20, height: harderArea.height },
+        ];
+        harderFenceSegments.forEach(seg => {
+            const fenceEl = document.createElement('div');
+            fenceEl.className = 'fence';
+            fenceEl.style.left = `${seg.x}px`; fenceEl.style.top = `${seg.y}px`;
+            fenceEl.style.width = `${seg.width}px`; fenceEl.style.height = `${seg.height}px`;
+            fenceEl.style.backgroundColor = '#A0522D'; // 다른 색 울타리
+            backgroundLayer.appendChild(fenceEl);
+            obstacles.push(fenceEl);
+        });
+    }
+
+    function createTree(x, y) {
+        const treeEl = document.createElement('div');
+        treeEl.className = 'tree';
+        treeEl.style.left = `${x}px`;
+        treeEl.style.top = `${y}px`;
+
+        const trunk = document.createElement('div');
+        trunk.className = 'tree-trunk';
+        
+        const leaves = document.createElement('div');
+        leaves.className = 'tree-leaves';
+
+        treeEl.appendChild(leaves);
+        treeEl.appendChild(trunk);
+        backgroundLayer.appendChild(treeEl);
+        obstacles.push(treeEl);
     }
 
     function createMonster(area) {
@@ -243,7 +356,26 @@ function startGame() {
         const monster = {
             element: monsterEl, healthBar: healthBar, type: 'slime',
             x: area.x + Math.random() * (area.width - 30), y: area.y + Math.random() * (area.height - 30),
-            hp: 50, maxHp: 50, xpValue: 40, speed: 0.5 + Math.random() * 0.5,
+            hp: 50, maxHp: 50, xpValue: 40, goldValue: 30, speed: 0.5 + Math.random() * 0.5,
+            effects: [],
+        };
+        monster.element.style.left = `${monster.x}px`; monster.element.style.top = `${monster.y}px`;
+        monsters.push(monster);
+        backgroundLayer.appendChild(monster.element);
+    }
+
+    function createHarderMonster(area) {
+        const monsterEl = document.createElement('div');
+        monsterEl.className = 'monster golem';
+        const healthBarContainer = document.createElement('div'); healthBarContainer.className = 'health-bar-container';
+        const healthBar = document.createElement('div'); healthBar.className = 'health-bar';
+        healthBarContainer.appendChild(healthBar);
+        monsterEl.appendChild(healthBarContainer);
+        const monster = {
+            element: monsterEl, healthBar: healthBar, type: 'golem',
+            x: area.x + Math.random() * (area.width - 45), y: area.y + Math.random() * (area.height - 45),
+            hp: 150, maxHp: 150, xpValue: 100, goldValue: 80, speed: 0.3 + Math.random() * 0.3,
+            effects: [],
         };
         monster.element.style.left = `${monster.x}px`; monster.element.style.top = `${monster.y}px`;
         monsters.push(monster);
@@ -253,7 +385,7 @@ function startGame() {
     function createNpc() {
         const npcEl = document.createElement('div');
         npcEl.className = 'npc';
-        const villageArea = { x: 1000, y: 1100, width: 900, height: 800 };
+        const villageArea = { x: 1475, y: 1250, width: 200, height: 750 }; // Main street area
         const npc = {
             element: npcEl, type: 'npc',
             x: villageArea.x + Math.random() * (villageArea.width - 30), y: villageArea.y + Math.random() * (villageArea.height - 30),
@@ -261,6 +393,12 @@ function startGame() {
             speed: 1, direction: null,
         };
         npc.element.style.left = `${npc.x}px`; npc.element.style.top = `${npc.y}px`;
+
+        const nameTag = document.createElement('div');
+        nameTag.className = 'npc-name-tag';
+        nameTag.textContent = dialogueData.npc.name;
+        npc.element.appendChild(nameTag);
+
         backgroundLayer.appendChild(npc.element);
         const thingsToAvoid = [...obstacles, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, questGiver.element, ...npcs.map(n => n.element)];
         if (thingsToAvoid.some(thing => thing && isColliding(npc.element, thing))) {
@@ -273,11 +411,22 @@ function startGame() {
 
     function respawnMonster() {
         setTimeout(() => {
-            if (monsters.length < 15) {
-                const area = { x: 2000, y: 500, width: 1000, height: 2000 };
+            const slimeCount = monsters.filter(m => m.type === 'slime').length;
+            if (slimeCount < 15) {
+                const area = { x: 3000, y: 500, width: 1000, height: 2000 };
                 createMonster(area);
             }
         }, 5000);
+    }
+
+    function respawnHarderMonster() {
+        setTimeout(() => {
+            const golemCount = monsters.filter(m => m.type === 'golem').length;
+            if (golemCount < 10) {
+                const area = { x: 3000, y: -1600, width: 1000, height: 1500 };
+                createHarderMonster(area);
+            }
+        }, 8000); // 리스폰 시간 약간 길게
     }
 
     function gainXp(amount) {
@@ -349,15 +498,15 @@ function startGame() {
     function handleMonsterKill(monster, giveRewards = true) {
         if (giveRewards) {
             gainXp(monster.xpValue);
-            player.gold += 30;
-        }
+            player.gold += monster.goldValue;
 
-        if (player.activeQuest) {
-            const quest = questsData[player.activeQuest];
-            if (quest.target === monster.type) {
-                player.questProgress[quest.target] = (player.questProgress[quest.target] || 0) + 1;
-                updateQuestUI();
-                savePlayerData(); // 퀘스트 진행도 즉시 저장
+            if (player.activeQuest) {
+                const quest = questsData[player.activeQuest];
+                if (quest.target === monster.type) {
+                    player.questProgress[quest.target] = (player.questProgress[quest.target] || 0) + 1;
+                    updateQuestUI();
+                    savePlayerData(); // 퀘스트 진행도 즉시 저장
+                }
             }
         }
 
@@ -366,7 +515,28 @@ function startGame() {
         if (index > -1) {
             monsters.splice(index, 1);
         }
-        respawnMonster();
+        
+        if (monster.type === 'slime') {
+            respawnMonster();
+        } else if (monster.type === 'golem') {
+            respawnHarderMonster();
+        }
+    }
+
+    function takeDamage(monster, damage) {
+        let finalDamage = damage;
+        const defenseDown = monster.effects.find(e => e.type === 'defense_down');
+        if (defenseDown) {
+            finalDamage *= 1.5; // 방어력 감소 시 50% 추가 데미지
+        }
+
+        monster.hp -= finalDamage;
+        
+        if (monster.hp <= 0) {
+            handleMonsterKill(monster);
+        } else {
+            monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
+        }
     }
 
     function playerAttack() {
@@ -397,12 +567,7 @@ function startGame() {
             for (let i = monsters.length - 1; i >= 0; i--) {
                 const monster = monsters[i];
                 if (isColliding(attackEffect, monster.element)) {
-                    monster.hp -= player.attackPower;
-                    if (monster.hp <= 0) {
-                        handleMonsterKill(monster);
-                    } else {
-                        monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
-                    }
+                    takeDamage(monster, player.attackPower);
                 }
             }
             setTimeout(() => {
@@ -412,28 +577,51 @@ function startGame() {
         }
     }
 
-    function fireProjectile(skillName = null) {
+    function fireProjectile(skillName = null, options = {}) {
         player.isAttacking = true;
         const projectileEl = document.createElement('div');
         projectileEl.className = 'projectile';
-        let projectileType = '', speed = 8, range = 300, damage = player.attackPower;
+        
+        let projectileType = '', 
+            speed = 8, 
+            range = 300, 
+            damage = player.attackPower,
+            effect = null,
+            duration = 0;
+
         if (skillName) {
             const skill = skillsData[skillName];
             damage = player.attackPower * skill.damage;
+            if (skill.effect) {
+                effect = skill.effect;
+                duration = skill.duration;
+            }
+
             if (skillName === '파이어볼') projectileType = 'fireball';
             else if (skillName === '파워샷') projectileType = 'power-shot';
             else if (skillName === '퀵샷') projectileType = 'quick-shot';
             else if (skillName === '마나 슬래시') projectileType = 'mana-slash';
+            else if (skillName === '속박의 화살') projectileType = 'bind-arrow';
+            else if (skillName === '빠른 연사') projectileType = 'bullet';
+
         } else {
             if (player.job === '건슬링어') projectileType = 'bullet';
             else if (player.job === '마법사') projectileType = 'magic-missile';
             else if (player.job === '궁수') projectileType = 'arrow';
         }
+
         if (projectileType) projectileEl.classList.add(projectileType);
+        
         const projectile = {
-            element: projectileEl, x: player.x + player.width / 2 - 5, y: player.y + player.height / 2 - 5,
-            direction: player.direction, speed, range, traveled: 0, damage,
+            element: projectileEl, 
+            x: player.x + player.width / 2 - 5, 
+            y: player.y + player.height / 2 - 5,
+            direction: player.direction, 
+            speed, range, traveled: 0, damage,
+            effect, duration,
+            ...options
         };
+
         projectiles.push(projectile);
         backgroundLayer.appendChild(projectileEl);
         setTimeout(() => { player.isAttacking = false; }, 500);
@@ -503,67 +691,257 @@ function startGame() {
     }
 
     function learnSkill() {
-        const availableSkill = Object.entries(skillsData).find(([name, data]) => data.job === player.job);
-        if (!availableSkill) { alert("이 직업은 배울 수 있는 스킬이 없습니다."); return; }
-        const [skillName, skillInfo] = availableSkill;
-        if (player.skills.includes(skillName)) { alert(`이미 '${skillName}' 스킬을 배웠습니다.`); return; }
-        if (player.gold < skillInfo.cost) { alert(`골드가 부족합니다. (${skillInfo.cost} G 필요)`); return; }
+        if (player.job === '없음') {
+            alert("먼저 직업을 선택해야 합니다.");
+            return;
+        }
+
+        const tier1Skill = Object.entries(skillsData).find(([name, data]) => data.job === player.job && data.tier === 1);
+        const tier2Skill = Object.entries(skillsData).find(([name, data]) => data.job === player.job && data.tier === 2);
+
+        const hasTier1 = tier1Skill && player.skills.includes(tier1Skill[0]);
+        const hasTier2 = tier2Skill && player.skills.includes(tier2Skill[0]);
+
+        let skillToLearn = null;
+
+        if (!hasTier1 && tier1Skill) {
+            skillToLearn = tier1Skill;
+        } else if (hasTier1 && !hasTier2 && tier2Skill) {
+            skillToLearn = tier2Skill;
+        } else {
+            alert("이미 모든 스킬을 배웠습니다.");
+            return;
+        }
+
+        if (!skillToLearn) {
+            alert("이 직업은 배울 수 있는 스킬이 없습니다.");
+            return;
+        }
+
+        const [skillName, skillInfo] = skillToLearn;
+
+        if (player.gold < skillInfo.cost) {
+            alert(`골드가 부족합니다. (${skillInfo.cost} G 필요)`);
+            return;
+        }
+
         if (confirm(`'${skillName}' 스킬을 배우시겠습니까?
 
 ${skillInfo.description}
 가격: ${skillInfo.cost} G`)) {
             player.gold -= skillInfo.cost;
             player.skills.push(skillName);
+            // 티어에 맞게 정렬하여 항상 1티어 스킬이 앞으로 오게 함
+            player.skills.sort((a, b) => (skillsData[a].tier || 0) - (skillsData[b].tier || 0));
             alert(`'${skillName}' 스킬을 배웠습니다!`);
             savePlayerData();
             updateUI();
         }
     }
 
-    function useSkill() {
-        if (player.isConversing || player.skills.length === 0) return;
-        const skillName = player.skills[0];
+    function applyEffect(monster, effect, duration) {
+        // 기존에 같은 효과가 있다면 제거
+        const existingEffectIndex = monster.effects.findIndex(e => e.type === effect);
+        if (existingEffectIndex > -1) {
+            clearTimeout(monster.effects[existingEffectIndex].timeoutId);
+            monster.effects.splice(existingEffectIndex, 1);
+        }
+
+        const effectIndicator = document.createElement('div');
+        effectIndicator.className = `effect-indicator ${effect}`;
+        monster.element.appendChild(effectIndicator);
+
+        const timeoutId = setTimeout(() => {
+            const effectIndex = monster.effects.findIndex(e => e.type === effect);
+            if (effectIndex > -1) {
+                monster.effects.splice(effectIndex, 1);
+            }
+            effectIndicator.remove();
+        }, duration);
+
+        monster.effects.push({ type: effect, timeoutId });
+    }
+
+    function useSkill(skillSlot) {
+        if (player.isConversing || player.skills.length < skillSlot) return;
+
+        const skillName = player.skills[skillSlot - 1];
+        if (!skillName) return;
+
         const skillInfo = skillsData[skillName];
         const now = Date.now();
-        if (now - (player.skillCooldowns[skillName] || 0) < skillInfo.cooldown) return;
+
+        if (now - (player.skillCooldowns[skillName] || 0) < skillInfo.cooldown) {
+            return; // Cooldown active
+        }
         player.skillCooldowns[skillName] = now;
+
+        let attackEffect, playerRect, hitboxRect, backgroundRect;
+
+        playerRect = player.element.getBoundingClientRect();
+        backgroundRect = backgroundLayer.getBoundingClientRect();
+
         switch (skillName) {
+            // --- Tier 1 ---
             case '강타':
             case '발도술':
                 player.isAttacking = true;
-                const attackEffect = document.createElement('div');
+                attackEffect = document.createElement('div');
                 attackEffect.className = 'attack-effect';
-                const playerRect = player.element.getBoundingClientRect();
-                let range, duration, effectClass;
-                if (skillName === '발도술') { range = 150; duration = 250; effectClass = 'baldosul-slash-effect'; }
-                else { range = 80; duration = 200; effectClass = 'gangta-effect'; }
-                attackEffect.classList.add(effectClass);
-                let hitboxRect;
-                if (player.direction === 'w') hitboxRect = { top: playerRect.top - range, left: playerRect.left - 20, width: playerRect.width + 40, height: range };
-                else if (player.direction === 's') hitboxRect = { top: playerRect.bottom, left: playerRect.left - 20, width: playerRect.width + 40, height: range };
-                else if (player.direction === 'a') hitboxRect = { top: playerRect.top - 20, left: playerRect.left - range, width: range, height: playerRect.height + 40 };
-                else hitboxRect = { top: playerRect.top - 20, left: playerRect.right, width: range, height: playerRect.height + 40 };
-                const backgroundRect = backgroundLayer.getBoundingClientRect();
+                let t1_range, t1_duration, t1_effectClass;
+                if (skillName === '발도술') { t1_range = 150; t1_duration = 250; t1_effectClass = 'baldosul-slash-effect'; }
+                else { t1_range = 80; t1_duration = 200; t1_effectClass = 'gangta-effect'; }
+                attackEffect.classList.add(t1_effectClass);
+                
+                if (player.direction === 'w') hitboxRect = { top: playerRect.top - t1_range, left: playerRect.left - 20, width: playerRect.width + 40, height: t1_range };
+                else if (player.direction === 's') hitboxRect = { top: playerRect.bottom, left: playerRect.left - 20, width: playerRect.width + 40, height: t1_range };
+                else if (player.direction === 'a') hitboxRect = { top: playerRect.top - 20, left: playerRect.left - t1_range, width: t1_range, height: playerRect.height + 40 };
+                else hitboxRect = { top: playerRect.top - 20, left: playerRect.right, width: t1_range, height: playerRect.height + 40 };
+                
                 Object.assign(attackEffect.style, {
                     left: `${hitboxRect.left - backgroundRect.left}px`, top: `${hitboxRect.top - backgroundRect.top}px`,
                     width: `${hitboxRect.width}px`, height: `${hitboxRect.height}px`
                 });
                 backgroundLayer.appendChild(attackEffect);
+
                 for (let i = monsters.length - 1; i >= 0; i--) {
                     const monster = monsters[i];
                     if (isColliding(attackEffect, monster.element)) {
-                        monster.hp -= player.attackPower * skillInfo.damage;
-                        if (monster.hp <= 0) handleMonsterKill(monster);
-                        else monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
+                        takeDamage(monster, player.attackPower * skillInfo.damage);
                     }
                 }
                 setTimeout(() => {
                     attackEffect.remove();
                     player.isAttacking = false;
-                }, duration);
+                }, t1_duration);
                 break;
+
             case '파이어볼': case '파워샷': case '퀵샷': case '마나 슬래시':
                 fireProjectile(skillName);
+                break;
+
+            // --- Tier 2 ---
+            case '약점 찌르기':
+            case '차지 슬래셔':
+                player.isAttacking = true;
+                attackEffect = document.createElement('div');
+                attackEffect.className = 'attack-effect';
+                let t2_range, t2_duration, t2_effectClass;
+
+                if (skillName === '차지 슬래셔') {
+                    t2_range = skillInfo.range; t2_duration = 400; t2_effectClass = 'charge-slasher-effect';
+                } else { // 약점 찌르기
+                    t2_range = 90; t2_duration = 250; t2_effectClass = 'weakness-poke-effect';
+                }
+                attackEffect.classList.add(t2_effectClass);
+
+                if (player.direction === 'w') hitboxRect = { top: playerRect.top - t2_range, left: playerRect.left - 30, width: playerRect.width + 60, height: t2_range };
+                else if (player.direction === 's') hitboxRect = { top: playerRect.bottom, left: playerRect.left - 30, width: playerRect.width + 60, height: t2_range };
+                else if (player.direction === 'a') hitboxRect = { top: playerRect.top - 30, left: playerRect.left - t2_range, width: t2_range, height: playerRect.height + 60 };
+                else hitboxRect = { top: playerRect.top - 30, left: playerRect.right, width: t2_range, height: playerRect.height + 60 };
+
+                Object.assign(attackEffect.style, {
+                    left: `${hitboxRect.left - backgroundRect.left}px`, top: `${hitboxRect.top - backgroundRect.top}px`,
+                    width: `${hitboxRect.width}px`, height: `${hitboxRect.height}px`
+                });
+                backgroundLayer.appendChild(attackEffect);
+
+                for (let i = monsters.length - 1; i >= 0; i--) {
+                    const monster = monsters[i];
+                    if (isColliding(attackEffect, monster.element)) {
+                        takeDamage(monster, player.attackPower * skillInfo.damage);
+                        if (skillInfo.effect) {
+                            applyEffect(monster, skillInfo.effect, skillInfo.duration);
+                        }
+                    }
+                }
+                setTimeout(() => {
+                    attackEffect.remove();
+                    player.isAttacking = false;
+                }, t2_duration);
+                break;
+
+            case '속박의 화살':
+                fireProjectile(skillName);
+                break;
+
+            case '빠른 연사':
+                for (let i = 0; i < skillInfo.shots; i++) {
+                    setTimeout(() => {
+                        const options = {
+                            x: player.x + player.width / 2 - 5 + (Math.random() - 0.5) * 20,
+                            y: player.y + player.height / 2 - 5 + (Math.random() - 0.5) * 20,
+                        }
+                        fireProjectile(skillName, options);
+                    }, i * skillInfo.interval);
+                }
+                break;
+            
+            case '라이트닝':
+                player.isAttacking = true;
+                let closestMonster = null;
+                let minDistance = Infinity;
+                const lightningRange = 400; // 라이트닝 스킬의 최대 사거리
+
+                monsters.forEach(monster => {
+                    const dx = player.x - monster.x;
+                    const dy = player.y - monster.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < lightningRange && distance < minDistance) {
+                        minDistance = distance;
+                        closestMonster = monster;
+                    }
+                });
+
+                if (closestMonster) {
+                    attackEffect = document.createElement('div');
+                    attackEffect.className = 'attack-effect lightning-effect';
+                    
+                    Object.assign(attackEffect.style, {
+                        left: `${closestMonster.x + closestMonster.element.offsetWidth / 2 - 15}px`,
+                        top: `${closestMonster.y - 100}px`, // 몬스터 위에서 떨어지는 효과
+                    });
+                    backgroundLayer.appendChild(attackEffect);
+                    
+                    takeDamage(closestMonster, player.attackPower * skillInfo.damage);
+
+                    setTimeout(() => {
+                        attackEffect.remove();
+                    }, 300);
+                }
+                
+                setTimeout(() => { player.isAttacking = false; }, 300);
+                break;
+
+            case '마력 폭발':
+                player.isAttacking = true;
+                attackEffect = document.createElement('div');
+                attackEffect.className = 'attack-effect mana-explosion-effect';
+                
+                const area = skillInfo.area;
+                const effectSize = area * 2;
+                
+                Object.assign(attackEffect.style, {
+                    left: `${player.x + player.width/2 - area}px`, 
+                    top: `${player.y + player.height/2 - area}px`,
+                    width: `${effectSize}px`, height: `${effectSize}px`
+                });
+                backgroundLayer.appendChild(attackEffect);
+
+                for (let i = monsters.length - 1; i >= 0; i--) {
+                    const monster = monsters[i];
+                    const dx = (player.x + player.width/2) - (monster.x + monster.element.offsetWidth/2);
+                    const dy = (player.y + player.height/2) - (monster.y + monster.element.offsetHeight/2);
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < area) {
+                        takeDamage(monster, player.attackPower * skillInfo.damage);
+                    }
+                }
+
+                setTimeout(() => {
+                    attackEffect.remove();
+                    player.isAttacking = false;
+                }, 500);
                 break;
         }
     }
@@ -701,6 +1079,12 @@ ${skillInfo.description}
 
         const aggroRange = 250;
         monsters.forEach(monster => {
+            // 상태 효과에 따른 이동 제한
+            const isBound = monster.effects.some(e => e.type === 'bind');
+            if (isBound) {
+                return; // 이동 불가
+            }
+
             const dx = player.x - monster.x, dy = player.y - monster.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance < aggroRange) {
@@ -726,11 +1110,12 @@ ${skillInfo.description}
             for (let j = monsters.length - 1; j >= 0; j--) {
                 const monster = monsters[j];
                 if (isColliding(p.element, monster.element)) {
-                    monster.hp -= p.damage;
+                    takeDamage(monster, p.damage);
+                    if (p.effect) {
+                        applyEffect(monster, p.effect, p.duration);
+                    }
                     p.element.remove(); projectiles.splice(i, 1);
-                    if (monster.hp <= 0) handleMonsterKill(monster);
-                    else monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
-                    break;
+                    break; 
                 }
             }
         }
@@ -739,7 +1124,7 @@ ${skillInfo.description}
             const monster = monsters[i];
             if (isColliding(player.element, monster.element)) {
                 player.hp -= 10;
-                handleMonsterKill(monster, false); // 보상 없이 몬스터 제거 및 퀘스트 카운트
+                handleMonsterKill(monster, false); // 보상 없이 몬스터 제거
                 if (player.hp <= 0) {
                     isGameOver = true;
                     savePlayerData();
@@ -777,7 +1162,14 @@ ${skillInfo.description}
         }
         if (key === 'e') equipWeapon();
         if (key === 'q') usePotion();
-        if (key === '1') useSkill();
+        if (key === '1') useSkill(1);
+        if (key === '2') useSkill(2);
+        if (key === '7') {
+            player.gold += 1000;
+            alert("1000 골드를 획득했습니다!");
+            updateUI();
+            savePlayerData();
+        }
     });
 
     function usePotion() {

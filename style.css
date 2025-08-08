@@ -84,8 +84,8 @@ body {
 
 #background-layer {
     position: absolute;
-    width: 3000px;
-    height: 3000px;
+    width: 4000px;
+    height: 4000px;
 }
 
 /* --- Game Objects --- */
@@ -247,7 +247,7 @@ body {
     z-index: 1;
 }
 
-.house, .shop, .shopkeeper, .monster, .attack-effect, .job-changer, .skill-master, .npc, .fence, .quest-giver, .job-resetter, .level-resetter {
+.house, .shop, .shopkeeper, .monster, .attack-effect, .job-changer, .skill-master, .npc, .fence, .quest-giver, .job-resetter, .level-resetter, .tree {
     position: absolute;
 }
 
@@ -261,6 +261,7 @@ body {
 
 .house, .shop {
     box-shadow: 10px 10px 15px rgba(0,0,0,0.4);
+    z-index: 4; /* 길보다 위에 보이도록 z-index 추가 */
 }
 
 .house .wall { 
@@ -325,6 +326,22 @@ body {
     border-radius: 5px;
 }
 
+.npc-name-tag {
+    position: absolute;
+    top: -22px; /* NPC 머리 바로 위에 위치하도록 조정 */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap; /* 이름이 길어도 한 줄로 표시 */
+    pointer-events: none; /* 이름표가 마우스 클릭을 방해하지 않도록 설정 */
+    z-index: 15; /* 다른 요소에 가려지지 않도록 설정 */
+}
+
 .monster { 
     position: absolute; 
     width: 30px; 
@@ -334,12 +351,47 @@ body {
     z-index: 7; 
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
+.monster.golem {
+    width: 45px;
+    height: 45px;
+    background-color: #6c757d; /* 회색 */
+    border: 3px solid #343a40; /* 더 어두운 회색 */
+    border-radius: 8px;
+}
 .attack-effect { background-color: rgba(255, 255, 255, 0.4); z-index: 11; }
 .attack-effect.slash {
     background: none;
     border-top: 2px solid rgba(255, 255, 255, 0.8);
     border-radius: 50%;
     animation: slash-anim 0.15s linear;
+}
+
+.tree {
+    width: 80px;
+    height: 90px;
+    z-index: 3; /* 집(4)보다 뒤, 길(1)보다 앞에 보이도록 수정 */
+}
+
+.tree .tree-trunk {
+    width: 20px;
+    height: 50px;
+    background-color: #6B4226;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.tree .tree-leaves {
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, #3CB371, #2E8B57, #006400);
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: inset 0 -8px 8px rgba(0,0,0,0.2);
 }
 
 @keyframes slash-anim {
@@ -595,4 +647,93 @@ body {
 #quest-tracker p {
     margin: 0;
     font-size: 0.9rem;
+}
+
+/* --- Tier 2 Skill Effects --- */
+.charge-slasher-effect {
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255, 215, 0, 0.9), rgba(255,255,255,0));
+    border-radius: 10px;
+    animation: charge-slasher-anim 0.4s ease-out;
+    transform-origin: center;
+}
+
+@keyframes charge-slasher-anim {
+    from { transform: scaleX(0.2); opacity: 1; }
+    to { transform: scaleX(1); opacity: 0; }
+}
+
+.weakness-poke-effect {
+    background: none;
+    border: 3px solid #800080; /* Purple */
+    border-radius: 50%;
+    animation: weakness-poke-anim 0.25s linear;
+}
+
+@keyframes weakness-poke-anim {
+    from { transform: scale(0); opacity: 1; }
+    to { transform: scale(1.5); opacity: 0; }
+}
+
+.lightning-effect {
+    width: 30px;
+    height: 120px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.2), rgba(255,255,255,0.8) 50%, rgba(255,255,255,0.2));
+    background-color: #FFFF00; /* Yellow */
+    clip-path: polygon(50% 0%, 60% 40%, 40% 40%, 50% 100%, 40% 60%, 60% 60%);
+    animation: lightning-anim 0.3s linear;
+}
+
+@keyframes lightning-anim {
+    0% { opacity: 1; height: 50px; }
+    100% { opacity: 0; height: 120px; }
+}
+
+.mana-explosion-effect {
+    background: radial-gradient(circle, rgba(148, 0, 211, 0.8) 0%, rgba(75, 0, 130, 0.5) 60%, rgba(75, 0, 130, 0) 100%);
+    border-radius: 50%;
+    animation: mana-explosion-anim 0.5s ease-out;
+}
+
+@keyframes mana-explosion-anim {
+    from { transform: scale(0.1); opacity: 1; }
+    to { transform: scale(1); opacity: 0; }
+}
+
+
+/* --- Tier 2 Projectiles --- */
+.projectile.bind-arrow {
+    width: 8px;
+    height: 30px;
+    background-color: #4682B4; /* SteelBlue */
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    box-shadow: 0 0 8px #5F9EA0;
+}
+
+
+/* --- Status Effect Indicators --- */
+.effect-indicator {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border-radius: 5px;
+    animation: effect-pulse 1.5s infinite;
+    box-sizing: border-box; /* 테두리가 크기에 영향을 주지 않도록 설정 */
+}
+
+.effect-indicator.bind {
+    box-shadow: inset 0 0 10px 5px rgba(70, 130, 180, 0.5);
+    border: 2px solid #5F9EA0;
+}
+
+.effect-indicator.defense_down {
+    box-shadow: inset 0 0 10px 5px rgba(128, 0, 128, 0.5);
+    border: 2px solid #DA70D6;
+}
+
+@keyframes effect-pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
 }
