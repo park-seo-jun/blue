@@ -139,16 +139,34 @@ function startGame() {
 
     // --- 월드 생성 ---
     function createWorld() {
-        const housePositions = [ { x: 1650, y: 1250 }, { x: 1150, y: 1650 }, { x: 1650, y: 1650 }];
+        const housePositions = [ 
+            { x: 1650, y: 1250 }, { x: 1150, y: 1650 }, { x: 1650, y: 1650 },
+            { x: 1350, y: 1100 }, { x: 1850, y: 1500 }, { x: 1350, y: 1850 }
+        ];
         housePositions.forEach(pos => {
             const house = document.createElement('div');
             house.className = 'house';
             house.style.left = `${pos.x}px`;
             house.style.top = `${pos.y}px`;
+            
             const wall = document.createElement('div');
             wall.className = 'wall';
+
             const roof = document.createElement('div');
             roof.className = 'roof';
+
+            const door = document.createElement('div');
+            door.className = 'door';
+
+            const window1 = document.createElement('div');
+            window1.className = 'window window-left';
+
+            const window2 = document.createElement('div');
+            window2.className = 'window window-right';
+
+            wall.appendChild(door);
+            wall.appendChild(window1);
+            wall.appendChild(window2);
             house.appendChild(roof);
             house.appendChild(wall);
             backgroundLayer.appendChild(house);
@@ -181,31 +199,31 @@ function startGame() {
 
         const jobChangerEl = document.createElement('div');
         jobChangerEl.className = 'job-changer';
-        jobChangerEl.style.left = '1500px';
-        jobChangerEl.style.top = '1400px';
+        jobChangerEl.style.left = '1500px'; // 마을 중앙
+        jobChangerEl.style.top = '1500px';
         backgroundLayer.appendChild(jobChangerEl);
         jobChanger = { element: jobChangerEl };
 
+        const skillMasterEl = document.createElement('div');
+        skillMasterEl.className = 'skill-master';
+        skillMasterEl.style.left = '1550px'; // 전직 NPC 옆
+        skillMasterEl.style.top = '1500px';
+        backgroundLayer.appendChild(skillMasterEl);
+        skillMaster = { element: skillMasterEl };
+
         const jobResetterEl = document.createElement('div');
         jobResetterEl.className = 'job-resetter';
-        jobResetterEl.style.left = '1710px'; // 중앙 위쪽 집 앞
-        jobResetterEl.style.top = '1400px';  // 중앙 위쪽 집 앞
+        jobResetterEl.style.left = '1900px'; // 오른쪽 위 구석
+        jobResetterEl.style.top = '1450px';
         backgroundLayer.appendChild(jobResetterEl);
         jobResetter = { element: jobResetterEl };
 
         const levelResetterEl = document.createElement('div');
         levelResetterEl.className = 'level-resetter';
-        levelResetterEl.style.left = '1710px'; // 아래쪽 집 앞
-        levelResetterEl.style.top = '1780px';  // 아래쪽 집 앞
+        levelResetterEl.style.left = '1200px'; // 왼쪽 아래 구석
+        levelResetterEl.style.top = '1850px';
         backgroundLayer.appendChild(levelResetterEl);
         levelResetter = { element: levelResetterEl };
-
-        const skillMasterEl = document.createElement('div');
-        skillMasterEl.className = 'skill-master';
-        skillMasterEl.style.left = '1300px';
-        skillMasterEl.style.top = '1550px';
-        backgroundLayer.appendChild(skillMasterEl);
-        skillMaster = { element: skillMasterEl };
 
         for (let i = 0; i < 4; i++) {
             createNpc();
