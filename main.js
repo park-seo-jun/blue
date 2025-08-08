@@ -49,6 +49,7 @@ function startGame() {
     let shopkeeper;
     let jobChanger;
     let jobResetter;
+    let levelResetter;
 
     const player = {
         element: playerEl,
@@ -174,6 +175,13 @@ function startGame() {
         backgroundLayer.appendChild(jobResetterEl);
         jobResetter = { element: jobResetterEl };
 
+        const levelResetterEl = document.createElement('div');
+        levelResetterEl.className = 'level-resetter';
+        levelResetterEl.style.left = '1710px'; // 아래쪽 집 앞
+        levelResetterEl.style.top = '1780px';  // 아래쪽 집 앞
+        backgroundLayer.appendChild(levelResetterEl);
+        levelResetter = { element: levelResetterEl };
+
         const area = { x: 2000, y: 500, width: 1000, height: 2000 };
         const ground = document.createElement('div');
         ground.className = 'hunting-ground';
@@ -190,7 +198,7 @@ function startGame() {
 
     function createMonster(area) {
         const monsterEl = document.createElement('div');
-        monsterEl.className = 'monster';
+        monsterEl.className = 'monster slime';
         const healthBarContainer = document.createElement('div');
         healthBarContainer.className = 'health-bar-container';
         const healthBar = document.createElement('div');
@@ -201,6 +209,7 @@ function startGame() {
         const monster = {
             element: monsterEl,
             healthBar: healthBar,
+            type: 'slime',
             x: area.x + Math.random() * (area.width - 30),
             y: area.y + Math.random() * (area.height - 30),
             hp: 50, maxHp: 50,
@@ -229,6 +238,7 @@ function startGame() {
             levelUp();
         }
         updateUI();
+        savePlayerData(); // 경험치 및 레벨 변경사항 저장
     }
 
     function levelUp() {
@@ -605,11 +615,45 @@ function startGame() {
             if (jobResetter && isColliding(player.element, jobResetter.element)) {
                 resetJob();
             }
+            if (levelResetter && isColliding(player.element, levelResetter.element)) {
+                resetLevel();
+            }
         }
         if (key === 'e') { // 'E' 키로 장착
             equipWeapon();
         }
     });
+
+    function resetLevel() {
+        if (player.level === 1) {
+            alert("이미 레벨 1입니다.");
+            return;
+        }
+
+        if (player.gold < 500) {
+            alert("골드가 부족합니다. (500 G 필요)");
+            return;
+        }
+
+        if (confirm("500 골드를 사용하여 레벨과 직업을 1로 초기화하시겠습니까? 모든 능력치와 소지품이 초기화됩니다.")) {
+            player.gold -= 500;
+            player.level = 1;
+            player.xp = 0;
+            player.xpToNextLevel = 100;
+            player.maxHp = 100;
+            player.hp = 100;
+            player.baseAttackPower = 5;
+            player.job = '없음';
+            player.inventory = [];
+            player.equippedWeapon = null;
+            
+            updateAttackPower();
+            updatePlayerVisuals();
+            alert("레벨, 직업, 소지품이 초기화되었습니다.");
+            savePlayerData();
+            updateUI();
+        }
+    }
 
     function resetJob() {
         if (player.job === '없음') {
@@ -617,18 +661,19 @@ function startGame() {
             return;
         }
 
-        if (player.gold < 1000) {
-            alert("골드가 부족합니다. (1000 G 필요)");
+        if (player.gold < 100) {
+            alert("골드가 부족합니다. (100 G 필요)");
             return;
         }
 
-        if (confirm(`1000 골드를 사용하여 ${player.job} 직업을 초기화하시겠습니까?`)) {
-            player.gold -= 1000;
+        if (confirm(`100 골드를 사용하여 ${player.job} 직업을 초기화하시겠습니까? 소지품도 모두 사라집니다.`)) {
+            player.gold -= 100;
             player.job = '없음';
+            player.inventory = [];
             player.equippedWeapon = null;
             updateAttackPower();
             updatePlayerVisuals();
-            alert("직업이 초기화되었습니다.");
+            alert("직업과 소지품이 초기화되었습니다.");
             savePlayerData();
             updateUI();
         }

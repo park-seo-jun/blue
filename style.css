@@ -102,27 +102,67 @@ body {
 
 .player-weapon {
     position: absolute;
-    width: 10px;
-    height: 35px;
-    background-color: #ccc;
-    border: 1px solid #555;
-    border-radius: 3px;
-    right: -15px; /* 플레이어 오른쪽에 위치 */
-    top: -5px;
+    right: -12px;
+    top: -10px;
+    width: 8px;
+    height: 40px;
+    background: linear-gradient(to top, #a0a0a0, #C0C0C0, #f0f0f0); /* Silver Blade */
+    border: 1px solid #808080;
     transform: rotate(20deg);
+    transform-origin: bottom right;
 }
 
+/* Sword Hilt */
+.player-weapon::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: -4px;
+    width: 16px;
+    height: 6px;
+    background: #DAA520; /* GoldenRod */
+    border: 1px solid #B8860B; /* DarkGoldenRod */
+    border-radius: 2px;
+}
+
+/* Wand */
 .player-weapon.wand {
-    background-color: #8A2BE2; /* 보라색 지팡이 */
-    box-shadow: 0 0 5px #DA70D6;
+    background: linear-gradient(to top, #6a3ab2, #8A2BE2); /* Staff */
+    border: 1px solid #4B0082;
 }
 
-.player-weapon.gun {
-    width: 20px;
+/* Wand Gem */
+.player-weapon.wand::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: -2px;
+    width: 12px;
     height: 12px;
-    background-color: #666; /* 회색 권총 */
+    background: #DA70D6;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #ff00ff, 0 0 12px #DA70D6;
+}
+
+/* Gun */
+.player-weapon.gun {
+    width: 22px;
+    height: 14px;
+    background: #555; /* Body */
+    border-radius: 2px;
     right: -25px;
     top: 5px;
+}
+
+/* Gun Barrel */
+.player-weapon.gun::before {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 2px;
+    width: 8px;
+    height: 6px;
+    background: #777;
 }
 
 
@@ -140,7 +180,9 @@ body {
 .shopkeeper { width: 32px; height: 32px; background-color: #4682B4; border: 2px solid #2a4d6b; z-index: 6; }
 .job-changer { width: 32px; height: 32px; background-color: #8A2BE2; border: 2px solid #4B0082; z-index: 6; border-radius: 50%; }
 .job-resetter { position: absolute; width: 32px; height: 32px; background-color: #f0f0f0; border: 2px solid #aaa; z-index: 6; border-radius: 50%; }
-.monster { width: 30px; height: 30px; background-color: #8B0000; border: 2px solid #400000; z-index: 7; }
+.level-resetter { position: absolute; width: 32px; height: 32px; background-color: #2E8B57; border: 2px solid #1e5e3a; z-index: 6; border-radius: 50%; }
+.monster { position: absolute; width: 30px; height: 30px; background-color: #8B0000; border: 2px solid #400000; z-index: 7; }
+.attack-effect { background-color: rgba(255, 0, 0, 0.5); z-index: 11; }
 .attack-effect { background-color: rgba(255, 0, 0, 0.5); z-index: 11; }
 
 .projectile {
