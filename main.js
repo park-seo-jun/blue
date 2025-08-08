@@ -104,7 +104,7 @@ function startGame() {
         'skillMaster': { name: '스킬 마스터', lines: ["기술이야말로 자신을 지키는 최고의 무기지.", "자네의 직업에 맞는 기술을 알려줄 수 있네."], action: { text: '스킬 배우기', handler: learnSkill } },
         'jobResetter': { name: '망각의 현자', lines: ["과거의 선택을 후회하는가...?", "새로운 시작에는 대가가 따르는 법."], action: { text: '직업 초기화', handler: resetJob } },
         'levelResetter': { name: '윤회의 석공', lines: ["그대의 여정은 너무 멀리 와버렸군.", "처음의 열정을 되찾고 싶다면 나를 찾아오게."], action: { text: '레벨 초기화', handler: resetLevel } },
-        'questGiver': { name: '모험가 길드장', lines: ["마을 근처의 슬라임들 때문에 주민들이 불안에 떨고 있네. 자네가 좀 처리해주지 않겠나?"] },
+        'questGiver': { name: '모험가 길드장', lines: ["마을 근처의 슬라임들 때문에 주민들이 불안에 떨고 있네. 자네가 좀 처리해주지 않겠나?"], },
         'npc': { name: '마을 주민', lines: ["요즘 몬스터들 때문에 걱정이 이만저만이 아니에요.", "저기 사냥터 쪽으로는 가지 않는 게 좋을 거예요.", "전설에 따르면 이 땅 어딘가에 푸른 보석이 잠들어 있대요."] }
     };
 
@@ -148,7 +148,6 @@ function startGame() {
     }
 
     function createWorld() {
-        // ... (집, 상점 생성 코드는 동일)
         const housePositions = [
             { x: 1650, y: 1250 }, { x: 1150, y: 1650 }, { x: 1650, y: 1650 },
             { x: 1350, y: 1100 }, { x: 1850, y: 1500 }, { x: 1350, y: 1850 }
@@ -272,14 +271,7 @@ function startGame() {
         npcs.push(npc);
     }
 
-    function respawnMonster(monsterType) {
-        if (player.activeQuest) {
-            const quest = questsData[player.activeQuest];
-            if (quest.target === monsterType) {
-                player.questProgress[quest.target] = (player.questProgress[quest.target] || 0) + 1;
-                updateQuestUI();
-            }
-        }
+    function respawnMonster() {
         setTimeout(() => {
             if (monsters.length < 15) {
                 const area = { x: 2000, y: 500, width: 1000, height: 2000 };
@@ -357,9 +349,16 @@ function startGame() {
     function handleMonsterKill(monster) {
         gainXp(monster.xpValue);
         player.gold += 30;
+        if (player.activeQuest) {
+            const quest = questsData[player.activeQuest];
+            if (quest.target === monster.type) {
+                player.questProgress[quest.target] = (player.questProgress[quest.target] || 0) + 1;
+                updateQuestUI();
+            }
+        }
         monster.element.remove();
         monsters.splice(monsters.indexOf(monster), 1);
-        respawnMonster(monster.type);
+        respawnMonster();
     }
 
     function playerAttack() {
@@ -422,7 +421,7 @@ function startGame() {
         if (projectileType) projectileEl.classList.add(projectileType);
         const projectile = {
             element: projectileEl, x: player.x + player.width / 2 - 5, y: player.y + player.height / 2 - 5,
-            direction: player.direction, speed, traveled: 0, damage,
+            direction: player.direction, speed, range, traveled: 0, damage,
         };
         projectiles.push(projectile);
         backgroundLayer.appendChild(projectileEl);
