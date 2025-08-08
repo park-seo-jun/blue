@@ -188,6 +188,28 @@ function startGame() {
         for (let i = 0; i < 4; i++) createNpc();
         const area = { x: 2000, y: 500, width: 1000, height: 2000 };
         for (let i = 0; i < 15; i++) createMonster(area);
+
+        // 사냥터 울타리 생성
+        const fenceSegments = [
+            // Top fence (with entrance)
+            { x: area.x, y: area.y, width: 300, height: 20 },
+            { x: area.x + 400, y: area.y, width: area.width - 400, height: 20 },
+            // Bottom fence
+            { x: area.x, y: area.y + area.height - 20, width: area.width, height: 20 },
+            // Right fence
+            { x: area.x + area.width - 20, y: area.y, width: 20, height: area.height },
+        ];
+
+        fenceSegments.forEach(seg => {
+            const fenceEl = document.createElement('div');
+            fenceEl.className = 'fence';
+            fenceEl.style.left = `${seg.x}px`;
+            fenceEl.style.top = `${seg.y}px`;
+            fenceEl.style.width = `${seg.width}px`;
+            fenceEl.style.height = `${seg.height}px`;
+            backgroundLayer.appendChild(fenceEl);
+            obstacles.push(fenceEl);
+        });
     }
 
     function createMonster(area) {
