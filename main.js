@@ -310,10 +310,14 @@ function startGame() {
     }
 
     function updatePlayerVisuals() {
-        // 기존 무기 제거
+        // 기존 무기 및 검집 제거
         const existingWeapon = player.element.querySelector('.player-weapon');
         if (existingWeapon) {
             existingWeapon.remove();
+        }
+        const existingSheath = player.element.querySelector('.katana-sheath');
+        if (existingSheath) {
+            existingSheath.remove();
         }
 
         // 새 무기 추가
@@ -331,6 +335,13 @@ function startGame() {
             }
             
             player.element.appendChild(weaponEl);
+
+            // 검사 + 카타나 조합일 때 검집 추가
+            if (player.job === '검사' && player.equippedWeapon.type === 'katana') {
+                const sheathEl = document.createElement('div');
+                sheathEl.className = 'katana-sheath';
+                player.element.appendChild(sheathEl);
+            }
         }
     }
 

@@ -226,6 +226,18 @@ body {
     left: -4.5px;
 }
 
+.katana-sheath {
+    position: absolute;
+    width: 6px;
+    height: 42px;
+    background: linear-gradient(to top, #2c1e12, #4a3420);
+    border: 1px solid #1a110a;
+    border-radius: 4px;
+    transform: rotate(-25deg);
+    left: -10px;
+    top: -5px;
+    z-index: -1; /* 칼보다 뒤에 보이도록 설정 */
+}
 
 .house, .shop, .shopkeeper, .monster, .attack-effect, .job-changer {
     position: absolute;
