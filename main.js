@@ -346,18 +346,26 @@ function startGame() {
         }
     }
 
-    function handleMonsterKill(monster) {
-        gainXp(monster.xpValue);
-        player.gold += 30;
+    function handleMonsterKill(monster, giveRewards = true) {
+        if (giveRewards) {
+            gainXp(monster.xpValue);
+            player.gold += 30;
+        }
+
         if (player.activeQuest) {
             const quest = questsData[player.activeQuest];
             if (quest.target === monster.type) {
                 player.questProgress[quest.target] = (player.questProgress[quest.target] || 0) + 1;
                 updateQuestUI();
+                savePlayerData(); // 퀘스트 진행도 즉시 저장
             }
         }
+
         monster.element.remove();
-        monsters.splice(monsters.indexOf(monster), 1);
+        const index = monsters.indexOf(monster);
+        if (index > -1) {
+            monsters.splice(index, 1);
+        }
         respawnMonster();
     }
 
@@ -390,8 +398,11 @@ function startGame() {
                 const monster = monsters[i];
                 if (isColliding(attackEffect, monster.element)) {
                     monster.hp -= player.attackPower;
-                    if (monster.hp <= 0) handleMonsterKill(monster);
-                    else monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
+                    if (monster.hp <= 0) {
+                        handleMonsterKill(monster);
+                    } else {
+                        monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
+                    }
                 }
             }
             setTimeout(() => {
@@ -728,7 +739,7 @@ ${skillInfo.description}
             const monster = monsters[i];
             if (isColliding(player.element, monster.element)) {
                 player.hp -= 10;
-                handleMonsterKill(monster);
+                handleMonsterKill(monster, false); // 보상 없이 몬스터 제거 및 퀘스트 카운트
                 if (player.hp <= 0) {
                     isGameOver = true;
                     savePlayerData();

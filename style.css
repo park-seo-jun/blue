@@ -247,7 +247,7 @@ body {
     z-index: 1;
 }
 
-.house, .shop, .shopkeeper, .monster, .attack-effect, .job-changer, .skill-master, .npc, .fence {
+.house, .shop, .shopkeeper, .monster, .attack-effect, .job-changer, .skill-master, .npc, .fence, .quest-giver, .job-resetter, .level-resetter {
     position: absolute;
 }
 
@@ -305,15 +305,16 @@ body {
 .shop .roof { width: 250px; height: 60px; background: #006400; position: absolute; top: -30px; left: -15px; }
 .shop .sign { position: absolute; top: 50px; left: -30px; width: 30px; height: 50px; background-color: #8B4513; writing-mode: vertical-rl; text-orientation: upright; text-align: center; font-size: 18px; color: #FFD700; }
 
-.shopkeeper, .job-changer, .job-resetter, .level-resetter, .skill-master, .npc {
+.shopkeeper, .job-changer, .job-resetter, .level-resetter, .skill-master, .npc, .quest-giver {
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
 .shopkeeper { width: 32px; height: 32px; background-color: #4682B4; border: 2px solid #2a4d6b; z-index: 6; }
 .job-changer { width: 32px; height: 32px; background-color: #8A2BE2; border: 2px solid #4B0082; z-index: 6; border-radius: 50%; }
-.job-resetter { position: absolute; width: 32px; height: 32px; background-color: #f0f0f0; border: 2px solid #aaa; z-index: 6; border-radius: 50%; }
-.level-resetter { position: absolute; width: 32px; height: 32px; background-color: #2E8B57; border: 2px solid #1e5e3a; z-index: 6; border-radius: 50%; }
+.job-resetter { width: 32px; height: 32px; background-color: #f0f0f0; border: 2px solid #aaa; z-index: 6; border-radius: 50%; }
+.level-resetter { width: 32px; height: 32px; background-color: #2E8B57; border: 2px solid #1e5e3a; z-index: 6; border-radius: 50%; }
 .skill-master { width: 32px; height: 32px; background-color: #9400D3; border: 2px solid #4B0082; z-index: 6; box-shadow: 0 0 10px #DA70D6, 0 4px 6px rgba(0,0,0,0.3); }
+.quest-giver { width: 32px; height: 32px; background-color: #FFD700; border: 2px solid #B8860B; z-index: 6; border-radius: 8px; }
 
 .npc {
     width: 30px;
