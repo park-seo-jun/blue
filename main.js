@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameContainer = document.getElementById('game-container');
 
     startButton.addEventListener('click', () => {
+        // 게임 화면 전환
         introScreen.style.opacity = '0';
         setTimeout(() => {
             introScreen.classList.add('hidden');
@@ -46,6 +47,7 @@ function startGame() {
     const monsters = [];
     const obstacles = [];
     const projectiles = [];
+    const npcs = [];
     let shopkeeper;
     let jobChanger;
     let jobResetter;
@@ -110,6 +112,8 @@ function startGame() {
         { name: '낡은 검', price: 100, type: 'sword', power: 5 },
         { name: '낡은 지팡이', price: 150, type: 'wand', power: 7 },
         { name: '낡은 권총', price: 75, type: 'gun', power: 4 },
+        { name: '낡은 활', price: 120, type: 'bow', power: 6 },
+        { name: '카타나', price: 110, type: 'katana', power: 5 },
     ];
 
     // --- 충돌 감지 함수 ---
@@ -182,6 +186,10 @@ function startGame() {
         backgroundLayer.appendChild(levelResetterEl);
         levelResetter = { element: levelResetterEl };
 
+        for (let i = 0; i < 4; i++) {
+            createNpc();
+        }
+
         const area = { x: 2000, y: 500, width: 1000, height: 2000 };
         const ground = document.createElement('div');
         ground.className = 'hunting-ground';
@@ -220,6 +228,48 @@ function startGame() {
         monster.element.style.top = `${monster.y}px`;
         monsters.push(monster);
         backgroundLayer.appendChild(monster.element);
+    }
+
+    function createNpc() {
+        const npcEl = document.createElement('div');
+        npcEl.className = 'npc';
+        
+        // 마을 중앙을 기준으로 NPC 생성
+        const villageArea = { x: 1000, y: 1100, width: 900, height: 800 };
+
+        const npc = {
+            element: npcEl,
+            x: villageArea.x + Math.random() * (villageArea.width - 30),
+            y: villageArea.y + Math.random() * (villageArea.height - 30),
+            width: 30, height: 30,
+            moveTimer: Math.random() * 200, // 초기 타이머
+            moveInterval: 100 + Math.random() * 200, // 1~3초마다 움직임
+            speed: 1,
+            direction: null,
+        };
+
+        npc.element.style.left = `${npc.x}px`;
+        npc.element.style.top = `${npc.y}px`;
+        
+        backgroundLayer.appendChild(npc.element); 
+
+        let isCollidingOnSpawn = false;
+        const thingsToAvoid = [...obstacles, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, ...npcs.map(n => n.element)];
+
+        for(const thing of thingsToAvoid) {
+            if (thing && isColliding(npc.element, thing)) {
+                isCollidingOnSpawn = true;
+                break;
+            }
+        }
+
+        if (isCollidingOnSpawn) {
+            npc.element.remove();
+            createNpc(); // 충돌 시 다시 생성
+            return;
+        }
+
+        npcs.push(npc);
     }
     
     function respawnMonster() {
@@ -270,6 +320,16 @@ function startGame() {
         if (player.equippedWeapon) {
             const weaponEl = document.createElement('div');
             weaponEl.className = `player-weapon ${player.equippedWeapon.type}`;
+
+            if (player.equippedWeapon.type === 'bow') {
+                const bowLimb = document.createElement('div');
+                bowLimb.className = 'bow-limb';
+                const bowGrip = document.createElement('div');
+                bowGrip.className = 'bow-grip';
+                weaponEl.appendChild(bowLimb);
+                weaponEl.appendChild(bowGrip);
+            }
+            
             player.element.appendChild(weaponEl);
         }
     }
@@ -301,14 +361,20 @@ function startGame() {
         if (player.isAttacking) return;
 
         // 직업에 따라 공격 방식 분기
-        if (player.job === '건슬링어' || player.job === '마법사') {
+        if (player.job === '건슬링어' || player.job === '마법사' || player.job === '궁수') {
             fireProjectile();
         } else {
-            // 기존 근접 공격
+            // 근접 공격 (전사, 암살자, 없음)
             player.isAttacking = true;
-            const attackRange = 50;
+            
+            let attackRange = 50;
             const attackEffect = document.createElement('div');
             attackEffect.className = 'attack-effect';
+
+            if (player.job === '검사') {
+                attackRange = 70; // 검사는 리치가 약간 더 김
+                attackEffect.classList.add('slash');
+            }
             
             const playerRect = player.element.getBoundingClientRect();
             let hitboxRect = { top: 0, left: 0, width: 0, height: 0 };
@@ -355,8 +421,10 @@ function startGame() {
         projectileEl.className = 'projectile';
         if (player.job === '건슬링어') {
             projectileEl.classList.add('bullet');
-        } else {
+        } else if (player.job === '마법사') {
             projectileEl.classList.add('magic-missile');
+        } else if (player.job === '궁수') {
+            projectileEl.classList.add('arrow');
         }
 
         const projectile = {
@@ -391,10 +459,12 @@ function startGame() {
 
         const rand = Math.random() * 100;
         let newJob = '';
-        if (rand <= 1) newJob = '마검사';
-        else if (rand <= 34) newJob = '전사';
-        else if (rand <= 67) newJob = '마법사';
-        else newJob = '건슬링어';
+        if (rand <= 5) newJob = '마검사';
+        else if (rand <= 20) newJob = '건슬링어';
+        else if (rand <= 35) newJob = '검사';
+        else if (rand <= 55) newJob = '전사';
+        else if (rand <= 75) newJob = '궁수';
+        else newJob = '마법사';
         
         player.job = newJob;
         alert(`${newJob}(으)로 전직했습니다!`);
@@ -419,6 +489,8 @@ function startGame() {
                     case '전사': canBuy = item.type === 'sword' || item.type === 'potion'; break;
                     case '마법사': canBuy = item.type === 'wand' || item.type === 'potion'; break;
                     case '건슬링어': canBuy = item.type === 'gun' || item.type === 'potion'; break;
+                    case '궁수': canBuy = item.type === 'bow' || item.type === 'potion'; break;
+                    case '검사': canBuy = item.type === 'katana' || item.type === 'potion'; break;
                     case '마검사': canBuy = item.type === 'sword' || item.type === 'wand' || item.type === 'potion'; break;
                 }
             }
@@ -508,6 +580,69 @@ function startGame() {
             // 5. 최종 위치를 다시 DOM 요소에 반영합니다.
             player.element.style.left = `${player.x}px`;
             player.element.style.top = `${player.y}px`;
+        }
+
+        // NPC AI: 무작위 이동
+        for (const npc of npcs) {
+            npc.moveTimer++;
+            if (npc.moveTimer > npc.moveInterval) {
+                const directions = ['w', 's', 'a', 'd', null, null, null]; // 멈출 확률을 높임
+                npc.direction = directions[Math.floor(Math.random() * directions.length)];
+                npc.moveTimer = 0;
+                npc.moveInterval = 100 + Math.random() * 200; // 1~3초 간격
+            }
+
+            let moveX = 0;
+            let moveY = 0;
+            if (npc.direction === 'w') moveY = -npc.speed;
+            if (npc.direction === 's') moveY = npc.speed;
+            if (npc.direction === 'a') moveX = -npc.speed;
+            if (npc.direction === 'd') moveX = npc.speed;
+
+            if (moveX !== 0 || moveY !== 0) {
+                const originalX = npc.x;
+                const originalY = npc.y;
+
+                npc.x += moveX;
+                npc.y += moveY;
+                npc.element.style.left = `${npc.x}px`;
+                npc.element.style.top = `${npc.y}px`;
+
+                // 충돌 감지 (장애물, 다른 NPC, 플레이어, 주요 NPC)
+                let isCollidingWithSomething = false;
+                const collidables = [
+                    ...obstacles, 
+                    player.element, 
+                    shopkeeper.element, 
+                    jobChanger.element, 
+                    jobResetter.element, 
+                    levelResetter.element
+                ];
+
+                for (const item of collidables) {
+                    if (item && isColliding(npc.element, item)) {
+                        isCollidingWithSomething = true;
+                        break;
+                    }
+                }
+
+                if (!isCollidingWithSomething) {
+                    for (const otherNpc of npcs) {
+                        if (npc !== otherNpc && isColliding(npc.element, otherNpc.element)) {
+                            isCollidingWithSomething = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isCollidingWithSomething) {
+                    npc.x = originalX;
+                    npc.y = originalY;
+                    npc.element.style.left = `${npc.x}px`;
+                    npc.element.style.top = `${npc.y}px`;
+                    npc.direction = null; // 이동 중지
+                }
+            }
         }
 
         // 몬스터 AI: 플레이어 추적
@@ -622,7 +757,31 @@ function startGame() {
         if (key === 'e') { // 'E' 키로 장착
             equipWeapon();
         }
+        if (key === 'q') { // 'Q' 키로 포션 사용
+            usePotion();
+        }
     });
+
+    function usePotion() {
+        const potionIndex = player.inventory.findIndex(item => item === 'HP 포션');
+
+        if (potionIndex === -1) {
+            alert("HP 포션이 없습니다.");
+            return;
+        }
+
+        if (player.hp >= player.maxHp) {
+            alert("체력이 이미 가득 찼습니다.");
+            return;
+        }
+
+        player.inventory.splice(potionIndex, 1); // 인벤토리에서 포션 하나 제거
+        player.hp = Math.min(player.maxHp, player.hp + 30); // 30만큼 회복, 최대 HP 초과 방지
+
+        alert("HP 포션을 사용하여 30의 체력을 회복했습니다!");
+        updateUI();
+        savePlayerData();
+    }
 
     function resetLevel() {
         if (player.level === 1) {
