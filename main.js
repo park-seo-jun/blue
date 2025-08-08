@@ -448,7 +448,7 @@ function startGame() {
 
         if (skillName) {
             const skill = skillsData[skillName];
-            damage *= skill.damage;
+            damage = player.attackPower * skill.damage; // 스킬 대미지 계산 수정
             if (skillName === '파이어볼') projectileType = 'fireball';
             if (skillName === '파워샷') projectileType = 'power-shot';
             if (skillName === '퀵샷') projectileType = 'quick-shot';
@@ -533,19 +533,30 @@ ${skillInfo.description}
             case '발도술':
                 player.isAttacking = true;
                 const attackEffect = document.createElement('div');
-                attackEffect.className = `attack-effect ${skillName.toLowerCase()}-effect`;
+                attackEffect.className = `attack-effect`;
                 
                 const playerRect = player.element.getBoundingClientRect();
-                const range = skillName === '발도술' ? 120 : 80;
-                const duration = skillName === '발도술' ? 300 : 200;
+                let range, duration, effectClass;
 
-                let hitboxRect = { top: playerRect.top - range/2, left: playerRect.left - range/2, width: playerRect.width + range, height: playerRect.height + range };
-                if (skillName === '강타') {
-                     if (player.direction === 'w') hitboxRect = { top: playerRect.top - range, left: playerRect.left, width: playerRect.width, height: range };
-                     else if (player.direction === 's') hitboxRect = { top: playerRect.bottom, left: playerRect.left, width: playerRect.width, height: range };
-                     else if (player.direction === 'a') hitboxRect = { top: playerRect.top, left: playerRect.left - range, width: range, height: playerRect.height };
-                     else if (player.direction === 'd') hitboxRect = { top: playerRect.top, left: playerRect.right, width: range, height: playerRect.height };
+                if (skillName === '발도술') {
+                    range = 150; // 발도술의 리치
+                    duration = 250;
+                    effectClass = 'baldosul-slash-effect';
+                } else { // 강타
+                    range = 80;
+                    duration = 200;
+                    effectClass = 'gangta-effect';
                 }
+                attackEffect.classList.add(effectClass);
+
+                let hitboxRect = { top: 0, left: 0, width: 0, height: 0 };
+                
+                // 발도술과 강타 모두 전방 공격으로 변경
+                if (player.direction === 'w') hitboxRect = { top: playerRect.top - range, left: playerRect.left - 20, width: playerRect.width + 40, height: range };
+                else if (player.direction === 's') hitboxRect = { top: playerRect.bottom, left: playerRect.left - 20, width: playerRect.width + 40, height: range };
+                else if (player.direction === 'a') hitboxRect = { top: playerRect.top - 20, left: playerRect.left - range, width: range, height: playerRect.height + 40 };
+                else if (player.direction === 'd') hitboxRect = { top: playerRect.top - 20, left: playerRect.right, width: range, height: playerRect.height + 40 };
+                
 
                 const backgroundRect = backgroundLayer.getBoundingClientRect();
                 attackEffect.style.left = `${hitboxRect.left - backgroundRect.left}px`;

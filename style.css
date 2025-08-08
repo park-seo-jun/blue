@@ -281,18 +281,20 @@ body {
 }
 
 /* --- Skill Effects --- */
-.발도술-effect {
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(173,216,230,0.8) 40%, rgba(255,255,255,0) 70%);
+.baldosul-slash-effect {
+    background: linear-gradient(90deg, rgba(255,255,255,0), rgba(173, 216, 230, 0.9), rgba(255,255,255,0));
     border-radius: 50%;
-    animation: baldosul-anim 0.3s ease-out;
+    clip-path: polygon(0 45%, 100% 45%, 100% 55%, 0 55%);
+    animation: baldosul-slash-anim 0.25s ease-out;
+    transform-origin: center;
 }
 
-@keyframes baldosul-anim {
-    from { transform: scale(0); opacity: 1; }
-    to { transform: scale(1); opacity: 0; }
+@keyframes baldosul-slash-anim {
+    from { transform: scaleX(0); opacity: 1; }
+    to { transform: scaleX(1); opacity: 0; }
 }
 
-.강타-effect {
+.gangta-effect {
     background: radial-gradient(circle, rgba(255,100,100,0.8) 0%, rgba(200,0,0,0.5) 60%, rgba(255,0,0,0) 100%);
     animation: gangta-anim 0.2s linear;
 }
