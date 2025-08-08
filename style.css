@@ -142,6 +142,27 @@ body {
 .monster { width: 30px; height: 30px; background-color: #8B0000; border: 2px solid #400000; z-index: 7; }
 .attack-effect { background-color: rgba(255, 0, 0, 0.5); z-index: 11; }
 
+.projectile {
+    position: absolute;
+    z-index: 8;
+}
+
+.projectile.bullet {
+    width: 10px;
+    height: 4px;
+    background-color: #f0f0f0;
+    box-shadow: 0 0 4px #fff;
+}
+
+.projectile.magic-missile {
+    width: 12px;
+    height: 12px;
+    background-color: #00ffff;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00ffff, 0 0 12px #00aaff;
+}
+
+
 /* --- UI --- */
 #ui-layer {
     position: absolute;
