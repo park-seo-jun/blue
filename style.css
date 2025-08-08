@@ -240,6 +240,13 @@ body {
     z-index: -1; /* 칼보다 뒤에 보이도록 설정 */
 }
 
+.path {
+    position: absolute;
+    background-color: #FFDAB9; /* PeachPuff */
+    border-radius: 0;
+    z-index: 1;
+}
+
 .house, .shop, .shopkeeper, .monster, .attack-effect, .job-changer, .skill-master, .npc {
     position: absolute;
 }

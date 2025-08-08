@@ -225,6 +225,26 @@ function startGame() {
         backgroundLayer.appendChild(levelResetterEl);
         levelResetter = { element: levelResetterEl };
 
+        const pathSegments = [
+            // 중앙 광장
+            { x: 1450, y: 1450, width: 150, height: 150 },
+            // 길
+            { x: 1500, y: 1600, width: 50, height: 200 }, // 아래
+            { x: 1500, y: 1300, width: 50, height: 150 }, // 위
+            { x: 1250, y: 1500, width: 200, height: 50 }, // 왼쪽
+            { x: 1600, y: 1500, width: 200, height: 50 }, // 오른쪽
+        ];
+
+        pathSegments.forEach(seg => {
+            const pathEl = document.createElement('div');
+            pathEl.className = 'path';
+            pathEl.style.left = `${seg.x}px`;
+            pathEl.style.top = `${seg.y}px`;
+            pathEl.style.width = `${seg.width}px`;
+            pathEl.style.height = `${seg.height}px`;
+            backgroundLayer.appendChild(pathEl);
+        });
+
         for (let i = 0; i < 4; i++) {
             createNpc();
         }
