@@ -36,6 +36,9 @@ function startGame() {
     const dialogueTextEl = document.getElementById('dialogue-text');
     const dialogueActionsEl = document.getElementById('dialogue-actions');
     const closeDialogueButton = document.getElementById('close-dialogue-button');
+    const questTracker = document.getElementById('quest-tracker');
+    const questTitleEl = document.getElementById('quest-title');
+    const questObjectiveEl = document.getElementById('quest-objective');
 
     // 게임 설정
     const playerSpeed = 5;
@@ -51,7 +54,7 @@ function startGame() {
     const obstacles = [];
     const projectiles = [];
     const npcs = [];
-    let shopkeeper, jobChanger, jobResetter, levelResetter, skillMaster;
+    let shopkeeper, jobChanger, jobResetter, levelResetter, skillMaster, questGiver;
 
     const player = {
         element: playerEl,
@@ -72,6 +75,18 @@ function startGame() {
         equippedWeapon: null,
         skills: [],
         skillCooldowns: {},
+        activeQuest: null,
+        questProgress: {},
+    };
+
+    const questsData = {
+        'slimeSlayer': {
+            title: "초보 모험가의 증명",
+            objective: "슬라임 10마리 처치",
+            target: 'slime',
+            count: 10,
+            reward: { xp: 150, gold: 300 }
+        }
     };
 
     const skillsData = {
@@ -84,12 +99,13 @@ function startGame() {
     };
     
     const dialogueData = {
-        'shopkeeper': { name: '상점 주인', lines: ["어서오세요! 없는 것 빼고 다 있답니다.", "오늘은 뭐가 필요하신가요?", "둘러보세요. 좋은 물건이 많습니다."], action: { text: '상점 열기', handler: openShop } },
-        'jobChanger': { name: '전직 교관', lines: ["자네의 잠재력이 보이는군. 새로운 길을 개척해보겠나?", "강해지고 싶다면 언제든지 찾아오게.", "수련을 통해 새로운 힘을 얻을 수 있다네."], action: { text: '전직하기', handler: changeJob } },
-        'skillMaster': { name: '스킬 마스터', lines: ["기술이야말로 자신을 지키는 최고의 무기지.", "자네의 직업에 맞는 기술을 알려줄 수 있네.", "새로운 기술을 배워보겠나?"], action: { text: '스킬 배우기', handler: learnSkill } },
-        'jobResetter': { name: '망각의 현자', lines: ["과거의 선택을 후회하는가...?", "새로운 시작에는 대가가 따르는 법.", "모든 것을 처음으로 되돌릴 수 있는 기회를 주지."], action: { text: '직업 초기화', handler: resetJob } },
-        'levelResetter': { name: '윤회의 석공', lines: ["그대의 여정은 너무 멀리 와버렸군.", "처음의 열정을 되찾고 싶다면 나를 찾아오게.", "모든 것을 잊고 새로운 삶을 시작하겠나?"], action: { text: '레벨 초기화', handler: resetLevel } },
-        'npc': { name: '마을 주민', lines: ["요즘 몬스터들 때문에 걱정이 이만저만이 아니에요.", "저기 사냥터 쪽으로는 가지 않는 게 좋을 거예요.", "마을은 평화로워서 좋아요.", "전설에 따르면 이 땅 어딘가에 푸른 보석이 잠들어 있대요."] }
+        'shopkeeper': { name: '상점 주인', lines: ["어서오세요! 없는 것 빼고 다 있답니다.", "오늘은 뭐가 필요하신가요?"], action: { text: '상점 열기', handler: openShop } },
+        'jobChanger': { name: '전직 교관', lines: ["자네의 잠재력이 보이는군. 새로운 길을 개척해보겠나?", "강해지고 싶다면 언제든지 찾아오게."], action: { text: '전직하기', handler: changeJob } },
+        'skillMaster': { name: '스킬 마스터', lines: ["기술이야말로 자신을 지키는 최고의 무기지.", "자네의 직업에 맞는 기술을 알려줄 수 있네."], action: { text: '스킬 배우기', handler: learnSkill } },
+        'jobResetter': { name: '망각의 현자', lines: ["과거의 선택을 후회하는가...?", "새로운 시작에는 대가가 따르는 법."], action: { text: '직업 초기화', handler: resetJob } },
+        'levelResetter': { name: '윤회의 석공', lines: ["그대의 여정은 너무 멀리 와버렸군.", "처음의 열정을 되찾고 싶다면 나를 찾아오게."], action: { text: '레벨 초기화', handler: resetLevel } },
+        'questGiver': { name: '모험가 길드장', lines: ["마을 근처의 슬라임들 때문에 주민들이 불안에 떨고 있네. 자네가 좀 처리해주지 않겠나?"] },
+        'npc': { name: '마을 주민', lines: ["요즘 몬스터들 때문에 걱정이 이만저만이 아니에요.", "저기 사냥터 쪽으로는 가지 않는 게 좋을 거예요.", "전설에 따르면 이 땅 어딘가에 푸른 보석이 잠들어 있대요."] }
     };
 
     function savePlayerData() {
@@ -97,6 +113,7 @@ function startGame() {
             level: player.level, xp: player.xp, xpToNextLevel: player.xpToNextLevel,
             gold: player.gold, inventory: player.inventory, equippedWeapon: player.equippedWeapon,
             maxHp: player.maxHp, baseAttackPower: player.baseAttackPower, job: player.job, skills: player.skills,
+            activeQuest: player.activeQuest, questProgress: player.questProgress,
         };
         localStorage.setItem('rpgPlayerData', JSON.stringify(playerData));
     }
@@ -105,9 +122,16 @@ function startGame() {
         const savedData = localStorage.getItem('rpgPlayerData');
         if (savedData) {
             const playerData = JSON.parse(savedData);
-            Object.assign(player, { ...playerData, hp: playerData.maxHp, skills: playerData.skills || [] });
+            Object.assign(player, { 
+                ...playerData, 
+                hp: playerData.maxHp, 
+                skills: playerData.skills || [],
+                activeQuest: playerData.activeQuest || null,
+                questProgress: playerData.questProgress || {},
+            });
             updateAttackPower();
             updatePlayerVisuals();
+            updateQuestUI();
         }
     }
 
@@ -124,6 +148,7 @@ function startGame() {
     }
 
     function createWorld() {
+        // ... (집, 상점 생성 코드는 동일)
         const housePositions = [
             { x: 1650, y: 1250 }, { x: 1150, y: 1650 }, { x: 1650, y: 1650 },
             { x: 1350, y: 1100 }, { x: 1850, y: 1500 }, { x: 1350, y: 1850 }
@@ -172,6 +197,10 @@ function startGame() {
         levelResetter.element.className = 'level-resetter'; levelResetter.element.style.left = '1200px'; levelResetter.element.style.top = '1850px';
         backgroundLayer.appendChild(levelResetter.element);
 
+        questGiver = { element: document.createElement('div'), type: 'questGiver' };
+        questGiver.element.className = 'quest-giver'; questGiver.element.style.left = '1400px'; questGiver.element.style.top = '1650px';
+        backgroundLayer.appendChild(questGiver.element);
+
         const pathSegments = [
             { x: 1450, y: 1450, width: 150, height: 150 }, { x: 1500, y: 1600, width: 50, height: 200 },
             { x: 1500, y: 1300, width: 50, height: 150 }, { x: 1250, y: 1500, width: 200, height: 50 },
@@ -188,25 +217,18 @@ function startGame() {
         for (let i = 0; i < 4; i++) createNpc();
         const area = { x: 2000, y: 500, width: 1000, height: 2000 };
         for (let i = 0; i < 15; i++) createMonster(area);
-
-        // 사냥터 울타리 생성
+        
         const fenceSegments = [
-            // Top fence (with entrance)
             { x: area.x, y: area.y, width: 300, height: 20 },
             { x: area.x + 400, y: area.y, width: area.width - 400, height: 20 },
-            // Bottom fence
             { x: area.x, y: area.y + area.height - 20, width: area.width, height: 20 },
-            // Right fence
             { x: area.x + area.width - 20, y: area.y, width: 20, height: area.height },
         ];
-
         fenceSegments.forEach(seg => {
             const fenceEl = document.createElement('div');
             fenceEl.className = 'fence';
-            fenceEl.style.left = `${seg.x}px`;
-            fenceEl.style.top = `${seg.y}px`;
-            fenceEl.style.width = `${seg.width}px`;
-            fenceEl.style.height = `${seg.height}px`;
+            fenceEl.style.left = `${seg.x}px`; fenceEl.style.top = `${seg.y}px`;
+            fenceEl.style.width = `${seg.width}px`; fenceEl.style.height = `${seg.height}px`;
             backgroundLayer.appendChild(fenceEl);
             obstacles.push(fenceEl);
         });
@@ -241,7 +263,7 @@ function startGame() {
         };
         npc.element.style.left = `${npc.x}px`; npc.element.style.top = `${npc.y}px`;
         backgroundLayer.appendChild(npc.element);
-        const thingsToAvoid = [...obstacles, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, ...npcs.map(n => n.element)];
+        const thingsToAvoid = [...obstacles, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, questGiver.element, ...npcs.map(n => n.element)];
         if (thingsToAvoid.some(thing => thing && isColliding(npc.element, thing))) {
             npc.element.remove();
             createNpc();
@@ -250,7 +272,14 @@ function startGame() {
         npcs.push(npc);
     }
 
-    function respawnMonster() {
+    function respawnMonster(monsterType) {
+        if (player.activeQuest) {
+            const quest = questsData[player.activeQuest];
+            if (quest.target === monsterType) {
+                player.questProgress[quest.target] = (player.questProgress[quest.target] || 0) + 1;
+                updateQuestUI();
+            }
+        }
         setTimeout(() => {
             if (monsters.length < 15) {
                 const area = { x: 2000, y: 500, width: 1000, height: 2000 };
@@ -325,6 +354,14 @@ function startGame() {
         }
     }
 
+    function handleMonsterKill(monster) {
+        gainXp(monster.xpValue);
+        player.gold += 30;
+        monster.element.remove();
+        monsters.splice(monsters.indexOf(monster), 1);
+        respawnMonster(monster.type);
+    }
+
     function playerAttack() {
         if (player.isAttacking || player.isConversing) return;
         if (['건슬링어', '마법사', '궁수'].includes(player.job)) {
@@ -354,15 +391,8 @@ function startGame() {
                 const monster = monsters[i];
                 if (isColliding(attackEffect, monster.element)) {
                     monster.hp -= player.attackPower;
-                    if (monster.hp <= 0) {
-                        gainXp(monster.xpValue);
-                        player.gold += 30;
-                        monster.element.remove();
-                        monsters.splice(i, 1);
-                        respawnMonster();
-                    } else {
-                        monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
-                    }
+                    if (monster.hp <= 0) handleMonsterKill(monster);
+                    else monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
                 }
             }
             setTimeout(() => {
@@ -392,7 +422,7 @@ function startGame() {
         if (projectileType) projectileEl.classList.add(projectileType);
         const projectile = {
             element: projectileEl, x: player.x + player.width / 2 - 5, y: player.y + player.height / 2 - 5,
-            direction: player.direction, speed, range, traveled: 0, damage,
+            direction: player.direction, speed, traveled: 0, damage,
         };
         projectiles.push(projectile);
         backgroundLayer.appendChild(projectileEl);
@@ -404,16 +434,55 @@ function startGame() {
         if (!data) return;
         player.isConversing = true;
         npcNameEl.textContent = data.name;
-        dialogueTextEl.textContent = data.lines[Math.floor(Math.random() * data.lines.length)];
         dialogueActionsEl.innerHTML = '';
-        if (data.action) {
-            const button = document.createElement('button');
-            button.textContent = data.action.text;
-            button.onclick = () => {
-                data.action.handler();
-                hideDialogue();
-            };
-            dialogueActionsEl.appendChild(button);
+
+        if (npc.type === 'questGiver') {
+            const questId = 'slimeSlayer';
+            const quest = questsData[questId];
+            const progress = player.questProgress[quest.target] || 0;
+
+            if (!player.activeQuest) {
+                dialogueTextEl.textContent = "마을 근처의 슬라임들 때문에 주민들이 불안에 떨고 있네. 자네가 좀 처리해주지 않겠나?";
+                const button = document.createElement('button');
+                button.textContent = `[수락] ${quest.title}`;
+                button.onclick = () => {
+                    player.activeQuest = questId;
+                    player.questProgress[quest.target] = 0;
+                    updateQuestUI();
+                    savePlayerData();
+                    hideDialogue();
+                };
+                dialogueActionsEl.appendChild(button);
+            } else if (player.activeQuest === questId) {
+                if (progress >= quest.count) {
+                    dialogueTextEl.textContent = "훌륭하군! 덕분에 마을이 한시름 놓게 됐어. 이건 약속된 보상일세.";
+                    const button = document.createElement('button');
+                    button.textContent = `[완료] 보상 받기`;
+                    button.onclick = () => {
+                        gainXp(quest.reward.xp);
+                        player.gold += quest.reward.gold;
+                        player.activeQuest = null;
+                        player.questProgress = {};
+                        updateQuestUI();
+                        savePlayerData();
+                        hideDialogue();
+                    };
+                    dialogueActionsEl.appendChild(button);
+                } else {
+                    dialogueTextEl.textContent = `아직 임무를 완수하지 못한 모양이군. 서둘러주게. (${progress}/${quest.count})`;
+                }
+            }
+        } else {
+            dialogueTextEl.textContent = data.lines[Math.floor(Math.random() * data.lines.length)];
+            if (data.action) {
+                const button = document.createElement('button');
+                button.textContent = data.action.text;
+                button.onclick = () => {
+                    data.action.handler();
+                    hideDialogue();
+                };
+                dialogueActionsEl.appendChild(button);
+            }
         }
         dialogueBox.classList.remove('hidden');
     }
@@ -474,15 +543,8 @@ ${skillInfo.description}
                     const monster = monsters[i];
                     if (isColliding(attackEffect, monster.element)) {
                         monster.hp -= player.attackPower * skillInfo.damage;
-                        if (monster.hp <= 0) {
-                            gainXp(monster.xpValue);
-                            player.gold += 30;
-                            monster.element.remove();
-                            monsters.splice(i, 1);
-                            respawnMonster();
-                        } else {
-                            monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
-                        }
+                        if (monster.hp <= 0) handleMonsterKill(monster);
+                        else monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
                     }
                 }
                 setTimeout(() => {
@@ -568,6 +630,18 @@ ${skillInfo.description}
         if (playerInventoryEl) playerInventoryEl.textContent = player.inventory.join(', ') || '없음';
     }
 
+    function updateQuestUI() {
+        if (player.activeQuest) {
+            const quest = questsData[player.activeQuest];
+            const progress = player.questProgress[quest.target] || 0;
+            questTracker.classList.remove('hidden');
+            questTitleEl.textContent = quest.title;
+            questObjectiveEl.textContent = `${quest.objective} (${progress}/${quest.count})`;
+        } else {
+            questTracker.classList.add('hidden');
+        }
+    }
+
     const keysPressed = {};
     let gameLoopTimeout;
 
@@ -606,7 +680,7 @@ ${skillInfo.description}
                 const originalX = npc.x, originalY = npc.y;
                 npc.x += npcMoveX; npc.y += npcMoveY;
                 npc.element.style.left = `${npc.x}px`; npc.element.style.top = `${npc.y}px`;
-                const collidables = [...obstacles, player.element, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, ...npcs.filter(other => other !== npc).map(o => o.element)];
+                const collidables = [...obstacles, player.element, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, questGiver.element, ...npcs.filter(other => other !== npc).map(o => o.element)];
                 if (collidables.some(item => item && isColliding(npc.element, item))) {
                     npc.x = originalX; npc.y = originalY;
                     npc.element.style.left = `${npc.x}px`; npc.element.style.top = `${npc.y}px`;
@@ -644,14 +718,8 @@ ${skillInfo.description}
                 if (isColliding(p.element, monster.element)) {
                     monster.hp -= p.damage;
                     p.element.remove(); projectiles.splice(i, 1);
-                    if (monster.hp <= 0) {
-                        gainXp(monster.xpValue);
-                        player.gold += 30;
-                        monster.element.remove(); monsters.splice(j, 1);
-                        respawnMonster();
-                    } else {
-                        monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
-                    }
+                    if (monster.hp <= 0) handleMonsterKill(monster);
+                    else monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
                     break;
                 }
             }
@@ -661,8 +729,7 @@ ${skillInfo.description}
             const monster = monsters[i];
             if (isColliding(player.element, monster.element)) {
                 player.hp -= 10;
-                monster.element.remove(); monsters.splice(i, 1);
-                respawnMonster();
+                handleMonsterKill(monster);
                 if (player.hp <= 0) {
                     isGameOver = true;
                     savePlayerData();
@@ -690,9 +757,9 @@ ${skillInfo.description}
         if (player.isConversing) return;
 
         if (key === 'f') {
-            const allNpcs = [shopkeeper, jobChanger, skillMaster, jobResetter, levelResetter, ...npcs];
+            const allNpcs = [shopkeeper, jobChanger, skillMaster, jobResetter, levelResetter, questGiver, ...npcs];
             for (const npc of allNpcs) {
-                if (isColliding(player.element, npc.element)) {
+                if (npc && npc.element && isColliding(player.element, npc.element)) {
                     showDialogue(npc);
                     break;
                 }
@@ -721,10 +788,12 @@ ${skillInfo.description}
             player.gold -= 500;
             Object.assign(player, {
                 level: 1, xp: 0, xpToNextLevel: 100, maxHp: 100, hp: 100,
-                baseAttackPower: 5, job: '없음', inventory: [], equippedWeapon: null, skills: []
+                baseAttackPower: 5, job: '없음', inventory: [], equippedWeapon: null, skills: [],
+                activeQuest: null, questProgress: {}
             });
             updateAttackPower();
             updatePlayerVisuals();
+            updateQuestUI();
             alert("레벨, 직업, 소지품이 초기화되었습니다.");
             savePlayerData();
             updateUI();
