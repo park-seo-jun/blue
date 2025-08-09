@@ -114,7 +114,20 @@ body {
 }
 
 /* Sword Hilt */
-.player-weapon::after {
+.player-weapon.facing-right {
+    transform: scaleX(1);
+    right: -12px;
+    top: -10px;
+}
+
+.player-weapon.facing-left {
+    transform: scaleX(-1); /* 좌우 반전 */
+    left: -12px; /* 왼쪽 기준으로 위치 조정 */
+    top: -10px;
+}
+
+/* Sword Hilt - ONLY for swords */
+.player-weapon.sword::after {
     content: '';
     position: absolute;
     bottom: -2px;
@@ -146,13 +159,21 @@ body {
 }
 
 /* Gun */
+.player-weapon.gun.facing-right {
+    right: -25px;
+    top: 5px;
+}
+.player-weapon.gun.facing-left {
+    left: -25px;
+    top: 5px;
+}
+
+/* Gun Base Style */
 .player-weapon.gun {
     width: 22px;
     height: 14px;
     background: #555; /* Body */
     border-radius: 2px;
-    right: -25px;
-    top: 5px;
 }
 
 /* Gun Barrel */
@@ -167,15 +188,25 @@ body {
 }
 
 /* Bow */
+/* Bow Base Style */
 .player-weapon.bow {
     position: absolute;
-    right: -15px; /* 위치 재조정 */
-    top: -10px;
     width: 35px;
     height: 45px;
+    background: none;
+    border: none;
+    transform-origin: center center; /* 회전/반전의 중심을 중앙으로 설정 */
+}
+
+.player-weapon.bow.facing-right {
+    right: -20px; /* 위치 미세 조정 */
+    top: -15px;
     transform: rotate(20deg);
-    background: none; /* 배경 제거 */
-    border: none; /* 테두리 제거 */
+}
+.player-weapon.bow.facing-left {
+    left: -20px; /* 위치 미세 조정 */
+    top: -15px;
+    transform: scaleX(-1) rotate(20deg); /* 반전 후 회전 */
 }
 
 .bow-limb {
@@ -207,37 +238,94 @@ body {
 }
 
 /* Katana */
+/* Katana Base Style */
 .player-weapon.katana {
-    width: 3px; /* 칼날 두께 대폭 감소 */
+    width: 3px; /* 칼날 두께 원상 복구 */
     height: 45px;
     background: linear-gradient(to top, #b0c4de, #f0f8ff);
     border: 1px solid #708090;
     border-radius: 2px;
-    transform: rotate(30deg);
     transform-origin: bottom right;
-    right: -8px; /* 위치 재조정 (왼쪽으로) */
-    top: -16px;   /* 위치 재조정 (아래로) */
 }
 
+.player-weapon.katana.facing-right {
+    transform: rotate(30deg);
+    right: -8px;
+    top: -16px;
+}
+.player-weapon.katana.facing-left {
+    transform: scaleX(-1) rotate(30deg);
+    left: -8px;
+    top: -16px;
+}
+
+/* Katana Hilt - 손잡이 복구 */
 .player-weapon.katana::after {
+    content: '';
+    position: absolute;
     background: #36454F;
     border: 1px solid #000;
-    width: 12px; /* 손잡이 폭도 줄임 */
-    height: 4px; /* 손잡이 두께 대폭 감소 */
+    width: 12px; 
+    height: 4px; 
     left: -4.5px;
+    bottom: -2px;
 }
 
 .katana-sheath {
     position: absolute;
     width: 6px;
-    height: 42px;
+    height: 42px; /* 칼집 길이 수정 */
     background: linear-gradient(to top, #2c1e12, #4a3420);
     border: 1px solid #1a110a;
     border-radius: 4px;
+    z-index: -1; /* 칼보다 뒤에 보이도록 설정 */
+}
+
+.katana-sheath.facing-right {
     transform: rotate(-25deg);
     left: -10px;
     top: -5px;
-    z-index: -1; /* 칼보다 뒤에 보이도록 설정 */
+}
+
+.katana-sheath.facing-left {
+    transform: scaleX(-1) rotate(-25deg);
+    right: -10px; /* 왼쪽 대신 오른쪽 기준으로 */
+    top: -5px;
+}
+
+.player-shield {
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    background: radial-gradient(circle, #E0E0E0, #A9A9A9); /* 밝은 회색 -> 어두운 회색 */
+    border: 2px solid #696969; /* 더 어두운 회색 테두리 */
+    border-radius: 50%; /* 완벽한 원형 */
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* 외부 그림자 */
+    z-index: -1;
+}
+
+.player-shield.facing-right {
+    left: -18px; 
+    top: -2px;
+}
+
+.player-shield.facing-left {
+    right: -18px; /* 왼쪽 대신 오른쪽 기준으로 */
+    top: -2px;
+}
+
+/* 방패 중앙 장식 */
+.player-shield::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background: #C0C0C0; /* 은색 */
+    border: 1px solid #505050;
+    border-radius: 50%;
 }
 
 .path {
@@ -317,6 +405,23 @@ body {
 .skill-master { width: 32px; height: 32px; background-color: #9400D3; border: 2px solid #4B0082; z-index: 6; box-shadow: 0 0 10px #DA70D6, 0 4px 6px rgba(0,0,0,0.3); }
 .quest-giver { width: 32px; height: 32px; background-color: #FFD700; border: 2px solid #B8860B; z-index: 6; border-radius: 8px; }
 
+.hidden-job-master {
+    width: 32px;
+    height: 32px;
+    background-color: #4B0082; /* Indigo */
+    border: 2px solid #9400D3; /* DarkViolet */
+    z-index: 6;
+    border-radius: 50%;
+    box-shadow: 0 0 15px 5px #DA70D6; /* Orchid glow */
+    animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 15px 5px #DA70D6; }
+    50% { box-shadow: 0 0 25px 10px #DA70D6; }
+    100% { box-shadow: 0 0 15px 5px #DA70D6; }
+}
+
 .npc {
     width: 30px;
     height: 30px;
@@ -392,6 +497,16 @@ body {
     left: 50%;
     transform: translateX(-50%);
     box-shadow: inset 0 -8px 8px rgba(0,0,0,0.2);
+}
+
+.grass-patch {
+    position: absolute;
+    color: #6B8E23; /* OliveDrab */
+    font-size: 20px;
+    font-weight: bold;
+    z-index: 2; /* 길보다는 위, 나무보다는 아래 */
+    pointer-events: none; /* 클릭 방지 */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 @keyframes slash-anim {
@@ -521,9 +636,23 @@ body {
     border-radius: 5px;
     overflow: hidden;
 }
+.mp-bar-container {
+    width: 100%;
+    height: 10px;
+    background-color: #555;
+    border: 1px solid #000;
+    margin-top: 5px;
+    border-radius: 5px;
+    overflow: hidden;
+}
 .health-bar {
     height: 100%;
     background-color: #00FF00;
+    transition: width 0.2s linear;
+}
+.mp-bar {
+    height: 100%;
+    background-color: #00BFFF; /* DeepSkyBlue */
     transition: width 0.2s linear;
 }
 .xp-bar {
