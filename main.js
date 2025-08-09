@@ -47,6 +47,15 @@ function startGame(playerName) {
     const questTracker = document.getElementById('quest-tracker');
     const questTitleEl = document.getElementById('quest-title');
     const questObjectiveEl = document.getElementById('quest-objective');
+    const inventoryButton = document.getElementById('inventory-button');
+    const inventoryWindow = document.getElementById('inventory-window');
+    const inventoryListEl = document.getElementById('inventory-list');
+    const screenFlashEl = document.getElementById('screen-flash');
+    const fishingMinigameEl = document.getElementById('fishing-minigame');
+    const catchZoneEl = document.getElementById('catch-zone');
+    const fishIconEl = document.getElementById('fish-icon');
+    const fishingProgressBarEl = document.getElementById('fishing-progress-bar');
+    const fishingTextEl = document.getElementById('fishing-text');
 
     // 게임 설정
     const playerSpeed = 5;
@@ -65,7 +74,7 @@ function startGame(playerName) {
     const obstacles = [];
     const projectiles = [];
     const npcs = [];
-    let shopkeeper, jobChanger, jobResetter, levelResetter, skillMaster, questGiver, hiddenMerchant, titleShrine, appearanceMirror;
+    let shopkeeper, jobChanger, jobResetter, levelResetter, skillMaster, questGiver, hiddenMerchant, titleShrine, appearanceMirror, fishingSpot;
     let hiddenJobMaster = null;
 
     const hiddenNpcSpawnPoints = [
@@ -91,6 +100,7 @@ function startGame(playerName) {
         defense: 0,
         isAttacking: false,
         isConversing: false,
+        isFishing: false,
         level: 1,
         xp: 0,
         xpToNextLevel: 100,
@@ -107,6 +117,7 @@ function startGame(playerName) {
         unlockedNameColors: ['#FFD700'],
         bodyColor: 'linear-gradient(to bottom right, #3a7bd5, #00d2ff)',
         unlockedBodyColors: ['linear-gradient(to bottom right, #3a7bd5, #00d2ff)'],
+        heldItemElement: null,
     };
 
     const nameColorsData = [
@@ -124,6 +135,16 @@ function startGame(playerName) {
         { name: '루비', color: 'linear-gradient(to bottom right, #e52d27, #b31217)', cost: 2000 },
         { name: '골드', color: 'linear-gradient(to bottom right, #FDB813, #F27022)', cost: 5000 },
         { name: '그림자', color: 'linear-gradient(to bottom right, #434343, #000000)', cost: 10000 },
+    ];
+
+    const fishData = [
+        { name: '피라미', rarity: 'common', value: 10, emoji: '🐟' },
+        { name: '붕어', rarity: 'common', value: 15, emoji: '🐠' },
+        { name: '잉어', rarity: 'uncommon', value: 50, emoji: '🎏' },
+        { name: '메기', rarity: 'uncommon', value: 75, emoji: '🐡' },
+        { name: '황금 잉어', rarity: 'rare', value: 300, emoji: '🐠' },
+        { name: '상어', rarity: 'epic', value: 1200, emoji: '🦈' },
+        { name: '보물이 든 병', rarity: 'epic', value: 1000, emoji: '🍾' },
     ];
 
     const questsData = {
@@ -218,6 +239,7 @@ function startGame(playerName) {
 
     const shopItems = [
         { name: 'HP 포션', price: 50, type: 'potion' }, { name: 'MP 포션', price: 70, type: 'mana-potion', recovery: 20 },
+        { name: '낚싯대', price: 300, type: 'rod' },
         { name: '낡은 검', price: 100, type: 'sword', power: 5 },
         { name: '낡은 방패', price: 80, type: 'shield', defense: 5 },
         { name: '낡은 지팡이', price: 150, type: 'wand', power: 7 }, { name: '낡은 권총', price: 75, type: 'gun', power: 4 },
@@ -341,6 +363,12 @@ function startGame(playerName) {
         appearanceMirror.element.style.top = '1520px';
         backgroundLayer.appendChild(appearanceMirror.element);
 
+        fishingSpot = { element: document.createElement('div') };
+        fishingSpot.element.id = 'fishing-spot';
+        fishingSpot.element.style.left = '200px';
+        fishingSpot.element.style.top = '1000px';
+        backgroundLayer.appendChild(fishingSpot.element);
+
         const pathSegments = [
             { x: 1475, y: 1050, width: 200, height: 1000 },
             { x: 1425, y: 1050, width: 300, height: 100 },
@@ -356,10 +384,9 @@ function startGame(playerName) {
         });
 
         const treePositions = [
-            { x: 1050, y: 1050 }, { x: 1150, y: 1150 }, { x: 1050, y: 1450 }, 
-            { x: 1150, y: 1550 }, { x: 1050, y: 1750 }, { x: 1150, y: 1850 },
-            { x: 1900, y: 1050 }, { x: 1800, y: 1150 }, { x: 1900, y: 1450 },
-            { x: 1800, y: 1550 }, { x: 1900, y: 1750 }, { x: 1800, y: 1850 },
+            // 마을 오른쪽 숲 (재배치)
+            { x: 1900, y: 1050 }, { x: 1800, y: 1150 }, { x: 2050, y: 1350 },
+            { x: 2050, y: 1550 }, { x: 2050, y: 1750 }, { x: 1800, y: 1850 },
         ];
         treePositions.forEach(pos => createTree(pos.x, pos.y));
 
@@ -427,6 +454,21 @@ function startGame(playerName) {
             fenceEl.style.left = `${seg.x}px`; fenceEl.style.top = `${seg.y}px`;
             fenceEl.style.width = `${seg.width}px`; fenceEl.style.height = `${seg.height}px`;
             fenceEl.style.backgroundColor = '#A0522D';
+            backgroundLayer.appendChild(fenceEl);
+            obstacles.push(fenceEl);
+        });
+
+        // 꾸미기 공간 울타리
+        const decorationFenceSegments = [
+            { x: 1980, y: 1480, width: 70, height: 20 }, // Top
+            { x: 1980, y: 1850, width: 70, height: 20 }, // Bottom
+            { x: 2050, y: 1480, width: 20, height: 390 }, // Right
+        ];
+        decorationFenceSegments.forEach(seg => {
+            const fenceEl = document.createElement('div');
+            fenceEl.className = 'fence';
+            fenceEl.style.left = `${seg.x}px`; fenceEl.style.top = `${seg.y}px`;
+            fenceEl.style.width = `${seg.width}px`; fenceEl.style.height = `${seg.height}px`;
             backgroundLayer.appendChild(fenceEl);
             obstacles.push(fenceEl);
         });
@@ -524,8 +566,19 @@ function startGame(playerName) {
         }, 8000);
     }
 
+    function createFloatingText(text, type, x, y) {
+        const textEl = document.createElement('div');
+        textEl.className = `floating-text ${type}`;
+        textEl.textContent = text;
+        textEl.style.left = `${x}px`;
+        textEl.style.top = `${y}px`;
+        backgroundLayer.appendChild(textEl);
+        setTimeout(() => textEl.remove(), 1000);
+    }
+
     function gainXp(amount) {
         player.xp += amount;
+        createFloatingText(`+${amount} XP`, 'xp', player.x, player.y - 20);
         while (player.xp >= player.xpToNextLevel) levelUp();
         updateUI();
         savePlayerData();
@@ -603,6 +656,10 @@ function startGame(playerName) {
             else shieldEl.classList.add('facing-right');
             player.element.appendChild(shieldEl);
         }
+        
+        if (player.heldItemElement) {
+            updateHeldItemPosition();
+        }
     }
 
     function equipBestGear() {
@@ -613,7 +670,7 @@ function startGame(playerName) {
         const usableItems = player.inventory
             .map(itemName => allItems.find(shopItem => shopItem.name === itemName))
             .filter(item => {
-                if (!item || player.job === '없음') return false;
+                if (!item || player.job === '없음' || item.type === 'rod') return false;
                 if (item.exclusive) return player.job === item.exclusive;
                 switch (item.type) {
                     case 'sword': return ['전사', '마검사'].includes(player.job);
@@ -650,6 +707,7 @@ function startGame(playerName) {
         if (giveRewards) {
             gainXp(monster.xpValue);
             player.gold += monster.goldValue;
+            createFloatingText(`+${monster.goldValue} G`, 'gold', player.x, player.y);
 
             if (monster.type === 'slime') {
                 player.questProgress.slimeKills = (player.questProgress.slimeKills || 0) + 1;
@@ -675,15 +733,32 @@ function startGame(playerName) {
 
     function takeDamage(monster, damage) {
         let finalDamage = damage;
-        if (monster.effects.some(e => e.type === 'defense_down')) finalDamage *= 1.5;
+        const isCritical = Math.random() < 0.1; // 10% 확률
+        if (isCritical) {
+            finalDamage *= 1.5;
+            createFloatingText('CRITICAL!', 'critical', monster.x, monster.y - 20);
+        }
+        finalDamage = Math.ceil(finalDamage);
+
+        const defenseDown = monster.effects.find(e => e.type === 'defense_down');
+        if (defenseDown) {
+            finalDamage *= 1.5;
+        }
+
         monster.hp -= finalDamage;
+        monster.element.classList.add('hit');
+        setTimeout(() => monster.element.classList.remove('hit'), 200);
         
-        if (monster.hp <= 0) handleMonsterKill(monster);
-        else monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
+        if (monster.hp <= 0) {
+            handleMonsterKill(monster);
+        } else {
+            monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
+        }
     }
 
     function playerAttack() {
-        if (player.isAttacking || player.isConversing) return;
+        removeHeldItem();
+        if (player.isAttacking || player.isConversing || (player.equippedWeapon && player.equippedWeapon.type === 'rod')) return;
         if (['건슬링어', '마법사', '궁수', '마나 술사'].includes(player.job)) {
             fireProjectile();
         } else {
@@ -926,6 +1001,7 @@ ${skillInfo.description}
     }
 
     function useSkill(skillSlot) {
+        removeHeldItem();
         if (player.isConversing || player.skills.length < skillSlot) return;
 
         const skillName = player.skills[skillSlot - 1];
@@ -1077,7 +1153,7 @@ ${skillInfo.description}
                 const effectSize = area * 2;
                 
                 Object.assign(attackEffect.style, {
-                    left: `${player.x + player.width/2 - area}px`,
+                    left: `${player.x + player.width/2 - area}px`, 
                     top: `${player.y + player.height/2 - area}px`,
                     width: `${effectSize}px`, height: `${effectSize}px`
                 });
@@ -1123,12 +1199,11 @@ ${skillInfo.description}
             const li = document.createElement('li');
             li.innerHTML = `<span>${item.name}</span><span>${item.price} G</span><button>구매</button>`;
             const button = li.querySelector('button');
-            let canBuy = false;
-            if (player.job === '없음') {
-                canBuy = item.type === 'potion' || item.type === 'mana-potion';
+            let canBuy = true;
+            if (item.type !== 'potion' && item.type !== 'mana-potion' && item.type !== 'rod' && player.job === '없음') {
+                canBuy = false;
             } else {
                 switch (item.type) {
-                    case 'potion': case 'mana-potion': canBuy = true; break;
                     case 'sword': canBuy = ['전사', '마검사'].includes(player.job); break;
                     case 'wand': canBuy = ['마법사', '마검사', '마나 술사', '아이스'].includes(player.job); break;
                     case 'gun': canBuy = ['건슬링어'].includes(player.job); break;
@@ -1153,7 +1228,7 @@ ${skillInfo.description}
             player.gold -= item.price;
             player.inventory.push(item.name);
             updateUI();
-            if (item.type !== 'potion' && item.type !== 'mana-potion') alert(`${item.name}을(를) 구매했습니다! 'E' 키를 눌러 장비를 장착하세요.`);
+            if (item.type !== 'potion' && item.type !== 'mana-potion') alert(`${item.name}을(를) 구매했습니다!`);
             savePlayerData();
         } else {
             alert('골드가 부족합니다!');
@@ -1198,7 +1273,7 @@ ${skillInfo.description}
         let moveX = 0, moveY = 0;
         const prevFacing = player.facing;
 
-        if (!player.isConversing) {
+        if (!player.isConversing && !player.isFishing) {
             if (keysPressed['w']) { moveY = -playerSpeed; player.direction = 'w'; }
             if (keysPressed['s']) { moveY = playerSpeed; player.direction = 's'; }
             if (keysPressed['a']) { moveX = -playerSpeed; player.direction = 'a'; player.facing = 'left'; }
@@ -1208,6 +1283,7 @@ ${skillInfo.description}
         if (player.facing !== prevFacing) updatePlayerVisuals();
 
         if (moveX !== 0 || moveY !== 0) {
+            removeHeldItem();
             player.x += moveX;
             player.y += moveY;
             player.element.style.left = `${player.x}px`;
@@ -1291,6 +1367,8 @@ ${skillInfo.description}
             const monster = monsters[i];
             if (isColliding(player.element, monster.element)) {
                 player.hp -= Math.max(1, 10 - player.defense);
+                screenFlashEl.style.opacity = '0.5';
+                setTimeout(() => screenFlashEl.style.opacity = '0', 100);
                 handleMonsterKill(monster, false);
                 if (player.hp <= 0) {
                     player.hp = 0;
@@ -1318,6 +1396,7 @@ ${skillInfo.description}
         if (player.isConversing) return;
 
         if (key === 'f') {
+            removeHeldItem();
             let interacted = false;
             const allNpcs = [shopkeeper, jobChanger, skillMaster, jobResetter, levelResetter, questGiver, hiddenJobMaster, hiddenMerchant, ...npcs].filter(Boolean);
             for (const npc of allNpcs) {
@@ -1334,6 +1413,9 @@ ${skillInfo.description}
             if (!interacted && appearanceMirror && isColliding(player.element, appearanceMirror.element)) {
                 openBodyColorChanger();
             }
+            if (!interacted && fishingSpot && isColliding(player.element, fishingSpot.element)) {
+                startFishing();
+            }
         }
         if (key === 'e') equipBestGear();
         if (key === 'q') usePotion();
@@ -1348,8 +1430,8 @@ ${skillInfo.description}
         }
     });
 
-    function usePotion() {
-        const potionIndex = player.inventory.findIndex(item => item === 'HP 포션');
+    function usePotion(itemName = 'HP 포션') {
+        const potionIndex = player.inventory.findIndex(item => item === itemName);
         if (potionIndex === -1) { alert("HP 포션이 없습니다."); return; }
         if (player.hp >= player.maxHp) { alert("체력이 이미 가득 찼습니다."); return; }
         player.inventory.splice(potionIndex, 1);
@@ -1359,12 +1441,12 @@ ${skillInfo.description}
         savePlayerData();
     }
 
-    function useManaPotion() {
-        const potionIndex = player.inventory.findIndex(item => item === 'MP 포션');
+    function useManaPotion(itemName = 'MP 포션') {
+        const potionIndex = player.inventory.findIndex(item => item === itemName);
         if (potionIndex === -1) { alert("MP 포션이 없습니다."); return; }
         if (player.mp >= player.maxMp) { alert("마나가 이미 가득 찼습니다."); return; }
         
-        const itemData = shopItems.find(item => item.name === 'MP 포션');
+        const itemData = shopItems.find(item => item.name === itemName);
         if (!itemData) return;
 
         player.inventory.splice(potionIndex, 1);
@@ -1436,6 +1518,13 @@ ${skillInfo.description}
     const bodyColorListEl = document.getElementById('body-color-list');
     const closeBodyColorWindowButton = document.getElementById('close-body-color-window-button');
     closeBodyColorWindowButton.addEventListener('click', () => bodyColorWindow.classList.add('hidden'));
+
+    inventoryButton.addEventListener('click', () => {
+        inventoryWindow.classList.toggle('hidden');
+        if (!inventoryWindow.classList.contains('hidden')) {
+            updateInventoryUI();
+        }
+    });
 
     function updatePlayerNameDisplay() {
         playerNameEl.textContent = player.name;
@@ -1530,6 +1619,202 @@ ${skillInfo.description}
         bodyColorWindow.classList.remove('hidden');
     }
 
+    function updateInventoryUI() {
+        inventoryListEl.innerHTML = '';
+        if (player.inventory.length === 0) {
+            inventoryListEl.innerHTML = '<li>비어있음</li>';
+            return;
+        }
+
+        const itemCounts = player.inventory.reduce((acc, item) => {
+            acc[item] = (acc[item] || 0) + 1;
+            return acc;
+        }, {});
+
+        Object.entries(itemCounts).forEach(([itemName, count]) => {
+            const li = document.createElement('li');
+            const itemData = [...shopItems, ...hiddenShopItems, ...fishData].find(i => i.name === itemName);
+            
+            li.innerHTML = `<span>${itemName} (${count})</span>`;
+            
+            const buttonContainer = document.createElement('div');
+
+            if (itemData.type === 'potion' || itemData.type === 'mana-potion') {
+                const useButton = document.createElement('button');
+                useButton.textContent = '사용';
+                useButton.onclick = () => {
+                    if (itemData.type === 'potion') usePotion(itemName);
+                    else useManaPotion(itemName);
+                    updateInventoryUI();
+                };
+                buttonContainer.appendChild(useButton);
+            } else if (itemData.rarity) { // Fish
+                const holdButton = document.createElement('button');
+                holdButton.textContent = '들기';
+                holdButton.onclick = () => holdFish(itemData);
+                buttonContainer.appendChild(holdButton);
+
+                const sellButton = document.createElement('button');
+                sellButton.textContent = `판매 (${itemData.value} G)`;
+                sellButton.onclick = () => {
+                    player.gold += itemData.value;
+                    const itemIndex = player.inventory.indexOf(itemName);
+                    player.inventory.splice(itemIndex, 1);
+                    updateUI();
+                    updateInventoryUI();
+                    savePlayerData();
+                };
+                buttonContainer.appendChild(sellButton);
+            } else { // Equipment
+                const equipButton = document.createElement('button');
+                if ((player.equippedWeapon && player.equippedWeapon.name === itemName) || (player.equippedShield && player.equippedShield.name === itemName)) {
+                    equipButton.textContent = '해제';
+                    equipButton.onclick = () => unequipItem(itemData.type.includes('shield') ? 'shield' : 'weapon');
+                } else {
+                    equipButton.textContent = '장착';
+                    equipButton.onclick = () => equipItem(itemData);
+                }
+                buttonContainer.appendChild(equipButton);
+            }
+            li.appendChild(buttonContainer);
+            inventoryListEl.appendChild(li);
+        });
+    }
+
+    function equipItem(itemData) {
+        removeHeldItem();
+        if (itemData.type.includes('shield')) {
+            player.equippedShield = itemData;
+        } else {
+            player.equippedWeapon = itemData;
+        }
+        updateAttackPower();
+        updateDefense();
+        updatePlayerVisuals();
+        savePlayerData();
+        alert(`${itemData.name}을(를) 장착했습니다.`);
+        updateInventoryUI();
+    }
+
+    function unequipItem(itemType) {
+        if (itemType === 'weapon') {
+            player.equippedWeapon = null;
+            updateAttackPower();
+        } else if (itemType === 'shield') {
+            player.equippedShield = null;
+            updateDefense();
+        }
+        updatePlayerVisuals();
+        savePlayerData();
+        updateInventoryUI();
+    }
+
+    function holdFish(itemData) {
+        removeHeldItem(); // Remove any existing item
+        const fishEl = document.createElement('div');
+        fishEl.className = 'held-item';
+        fishEl.textContent = itemData.emoji || '🐟';
+        player.heldItemElement = fishEl;
+        player.element.appendChild(fishEl);
+        updateHeldItemPosition();
+        inventoryWindow.classList.add('hidden');
+    }
+
+    function removeHeldItem() {
+        if (player.heldItemElement) {
+            player.heldItemElement.remove();
+            player.heldItemElement = null;
+        }
+    }
+
+    function updateHeldItemPosition() {
+        if (!player.heldItemElement) return;
+        player.heldItemElement.classList.remove('facing-left', 'facing-right');
+        player.heldItemElement.classList.add(player.facing === 'left' ? 'facing-left' : 'facing-right');
+    }
+
+    function startFishing() {
+        if (player.isFishing) return;
+        if (!player.equippedWeapon || player.equippedWeapon.type !== 'rod') {
+            alert('낚싯대를 장착해야 낚시를 할 수 있습니다.');
+            return;
+        }
+        player.isFishing = true;
+        fishingTextEl.textContent = '낚시 중...';
+        fishingMinigameEl.classList.remove('hidden');
+
+        setTimeout(() => {
+            fishingTextEl.textContent = '입질이 왔다!';
+            runFishingMinigame();
+        }, 1000 + Math.random() * 2000);
+    }
+
+    function runFishingMinigame() {
+        let progress = 10;
+        let catchZonePosition = 125;
+        const catchZoneHeight = 60;
+        const barHeight = 250;
+        let minigameInterval;
+        let timeoutId;
+
+        const gameLogic = () => {
+            const fishPosition = fishIconEl.offsetTop;
+            
+            if (keysPressed['x']) { // x key
+                catchZonePosition = Math.max(0, catchZonePosition - 7);
+            } else {
+                catchZonePosition = Math.min(barHeight - catchZoneHeight, catchZonePosition + 7);
+            }
+            catchZoneEl.style.top = `${catchZonePosition}px`;
+
+            if (fishPosition > catchZonePosition && fishPosition < catchZonePosition + catchZoneHeight) {
+                progress = Math.min(100, progress + 2.5);
+            } else {
+                progress = Math.max(0, progress - 1);
+            }
+            
+            fishingProgressBarEl.style.width = `${progress}%`;
+
+            if (progress >= 100) {
+                clearInterval(minigameInterval);
+                clearTimeout(timeoutId);
+                endFishing(true);
+            } else if (progress <= 0) {
+                clearInterval(minigameInterval);
+                clearTimeout(timeoutId);
+                endFishing(false);
+            }
+        };
+
+        minigameInterval = setInterval(gameLogic, 50);
+
+        timeoutId = setTimeout(() => {
+            clearInterval(minigameInterval);
+            if (player.isFishing) { // Check if still fishing before failing
+                endFishing(false);
+            }
+        }, 8000); // 8초 제한
+    }
+
+    function endFishing(success) {
+        fishingMinigameEl.classList.add('hidden');
+        player.isFishing = false;
+        if (success) {
+            const rand = Math.random() * 100;
+            let caughtFish;
+            if (rand < 50) caughtFish = fishData.find(f => f.rarity === 'common');
+            else if (rand < 85) caughtFish = fishData.find(f => f.rarity === 'uncommon');
+            else if (rand < 98) caughtFish = fishData.find(f => f.rarity === 'rare');
+            else caughtFish = fishData.find(f => f.rarity === 'epic');
+            
+            alert(`${caughtFish.name}을(를) 낚았다!`);
+            player.inventory.push(caughtFish.name);
+            savePlayerData();
+        } else {
+            alert('물고기를 놓쳤다...');
+        }
+    }
+
     function openHiddenShop() {
         const hiddenItemListEl = document.getElementById('hidden-item-list');
         const playerInventoryHiddenEl = document.getElementById('player-inventory-hidden');
@@ -1569,7 +1854,7 @@ ${skillInfo.description}
                  document.getElementById('player-inventory-hidden').textContent = player.inventory.join(', ') || '없음';
             }
             updateUI();
-            if (item.type !== 'potion' && item.type !== 'mana-potion') alert(`${item.name}을(를) 구매했습니다! 'E' 키를 눌러 장비를 장착하세요.`);
+            if (item.type !== 'potion' && item.type !== 'mana-potion') alert(`${item.name}을(를) 구매했습니다!`);
             savePlayerData();
         } else {
             alert('골드가 부족합니다!');

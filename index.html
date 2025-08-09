@@ -8,6 +8,8 @@
 </head>
 <body>
 
+    <div id="screen-flash"></div>
+
     <div id="intro-screen">
         <h1 id="game-title">푸른 보석</h1>
         <div id="name-input-container">
@@ -113,6 +115,27 @@
                 <!-- 색상 목록은 JS에서 동적으로 추가 -->
             </ul>
             <button id="close-body-color-window-button">나가기</button>
+        </div>
+
+        <!-- 인벤토리 UI -->
+        <button id="inventory-button">🎒</button>
+        <div id="inventory-window" class="hidden">
+            <h2>인벤토리</h2>
+            <ul id="inventory-list">
+                <!-- 아이템 목록 -->
+            </ul>
+        </div>
+
+        <!-- 낚시 미니게임 UI -->
+        <div id="fishing-minigame" class="hidden">
+            <div id="fishing-bar-container">
+                <div id="catch-zone"></div>
+                <div id="fish-icon">🐟</div>
+            </div>
+            <div id="fishing-progress-container">
+                <div id="fishing-progress-bar"></div>
+            </div>
+            <div id="fishing-text"></div>
         </div>
     </div>
 
