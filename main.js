@@ -1,20 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const startButton = document.getElementById('start-button');
+    const confirmButton = document.getElementById('confirm-name-button');
+    const playerNameInput = document.getElementById('player-name-input');
     const introScreen = document.getElementById('intro-screen');
     const gameContainer = document.getElementById('game-container');
 
-    startButton.addEventListener('click', () => {
+    confirmButton.addEventListener('click', () => {
+        const playerName = playerNameInput.value.trim() || '모험가';
+
         introScreen.style.opacity = '0';
         setTimeout(() => {
             introScreen.classList.add('hidden');
             gameContainer.classList.remove('hidden');
-            startGame();
+            startGame(playerName);
         }, 1000);
-    }, { once: true }); // 이벤트가 한 번만 실행되도록 수정
+    }, { once: true });
 });
 
-function startGame() {
+function startGame(playerName) {
     // DOM 요소
+    const playerNameEl = document.getElementById('player-name');
+    playerNameEl.textContent = playerName;
     const backgroundLayer = document.getElementById('background-layer');
     const playerHpEl = document.getElementById('player-hp');
     const playerMaxHpEl = document.getElementById('player-max-hp');
@@ -53,6 +58,10 @@ function startGame() {
     playerEl.id = 'player';
     backgroundLayer.appendChild(playerEl);
 
+    const nameTag = document.createElement('div');
+    nameTag.className = 'player-name-tag';
+    playerEl.appendChild(nameTag);
+
     // 게임 객체
     const monsters = [];
     const obstacles = [];
@@ -71,7 +80,9 @@ function startGame() {
     ];
 
     const player = {
+        name: playerName,
         element: playerEl,
+        nameTagElement: nameTag,
         x: 1500, y: 1700,
         width: 30, height: 30,
         hp: 100, maxHp: 100,
@@ -98,6 +109,8 @@ function startGame() {
         questProgress: {},
         manaRegenTimer: 0, // 마나 회복 타이머
     };
+
+    nameTag.textContent = player.name;
 
     const questsData = {
         'slimeSlayer': {
@@ -143,6 +156,7 @@ function startGame() {
 
     function savePlayerData() {
         const playerData = {
+            name: player.name,
             level: player.level, xp: player.xp, xpToNextLevel: player.xpToNextLevel,
             gold: player.gold, inventory: player.inventory, 
             equippedWeapon: player.equippedWeapon, equippedShield: player.equippedShield,
@@ -167,6 +181,18 @@ function startGame() {
                 questProgress: playerData.questProgress || {},
                 equippedShield: playerData.equippedShield || null, 
             });
+
+            if (player.name) {
+                playerNameEl.textContent = player.name;
+                player.nameTagElement.textContent = player.name;
+            }
+
+            // 임시 마나 초기화 코드
+            if (player.maxMp !== 50) {
+                player.maxMp = 50;
+                player.mp = 50;
+            }
+
             updateAttackPower();
             updateDefense(); 
             updatePlayerVisuals();
@@ -1498,6 +1524,13 @@ ${skillInfo.description}
         if (player.gold < 100) { alert("골드가 부족합니다. (100 G 필요)"); return; }
         if (confirm(`100 골드를 사용하여 ${player.job} 직업을 초기화하시겠습니까? 소지품도 모두 사라집니다.`)) {
             player.gold -= 100;
+
+            // 마나 술사 직업 초기화 시 최대 마나 복구
+            if (player.job === '마나 술사') {
+                player.maxMp = Math.ceil(player.maxMp / 1.5);
+                player.mp = player.maxMp;
+            }
+
             Object.assign(player, { 
                 job: '없음', inventory: [], 
                 equippedWeapon: null, equippedShield: null, // 장착 아이템 초기화
@@ -1623,3 +1656,6 @@ ${skillInfo.description}
     gameLoop();
     setInterval(trySpawnHiddenNpc, 30000); // 30초마다 히든 NPC 출현 시도
 }
+
+
+// ... (기존 코드)
