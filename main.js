@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function startGame(playerName) {
     // DOM 요소
     const playerNameEl = document.getElementById('player-name');
-    playerNameEl.textContent = playerName;
     const backgroundLayer = document.getElementById('background-layer');
     const playerHpEl = document.getElementById('player-hp');
     const playerMaxHpEl = document.getElementById('player-max-hp');
@@ -33,7 +32,7 @@ function startGame(playerName) {
     const playerXpBarEl = document.getElementById('player-xp-bar');
     const playerJobEl = document.getElementById('player-job');
     const playerGoldEl = document.getElementById('player-gold');
-    const playerDefenseEl = document.getElementById('player-defense'); // 방어력 DOM 요소 추가
+    const playerDefenseEl = document.getElementById('player-defense');
     const gameOverScreen = document.getElementById('game-over-screen');
     const restartButton = document.getElementById('restart-button');
     const shopWindow = document.getElementById('shop-window');
@@ -56,27 +55,23 @@ function startGame(playerName) {
     // 플레이어 DOM 요소
     const playerEl = document.createElement('div');
     playerEl.id = 'player';
-    backgroundLayer.appendChild(playerEl);
-
     const nameTag = document.createElement('div');
     nameTag.className = 'player-name-tag';
     playerEl.appendChild(nameTag);
+    backgroundLayer.appendChild(playerEl);
 
     // 게임 객체
     const monsters = [];
     const obstacles = [];
     const projectiles = [];
     const npcs = [];
-    let shopkeeper, jobChanger, jobResetter, levelResetter, skillMaster, questGiver, hiddenMerchant;
-    let hiddenJobMaster = null; // 히든 NPC 객체
+    let shopkeeper, jobChanger, jobResetter, levelResetter, skillMaster, questGiver, hiddenMerchant, titleShrine, appearanceMirror;
+    let hiddenJobMaster = null;
 
-    // 히든 NPC 출현 가능 위치
     const hiddenNpcSpawnPoints = [
-        { x: 1200, y: 1050 }, // 마을 왼쪽 위
-        { x: 1800, y: 1050 }, // 마을 오른쪽 위
-        { x: 1100, y: 1950 }, // 마을 왼쪽 아래
-        { x: 1900, y: 1950 }, // 마을 오른쪽 아래
-        { x: 1575, y: 2050 }, // 마을 남쪽 입구 근처
+        { x: 1200, y: 1050 }, { x: 1800, y: 1050 },
+        { x: 1100, y: 1950 }, { x: 1900, y: 1950 },
+        { x: 1575, y: 2050 },
     ];
 
     const player = {
@@ -86,31 +81,50 @@ function startGame(playerName) {
         x: 1500, y: 1700,
         width: 30, height: 30,
         hp: 100, maxHp: 100,
-        mp: 50, maxMp: 50, // MP 속성 추가
+        mp: 50, maxMp: 50,
         gold: 0,
         inventory: [],
         direction: 'w',
         baseAttackPower: 5,
         attackPower: 5,
-        baseDefense: 0, 
-        defense: 0,     
+        baseDefense: 0,
+        defense: 0,
         isAttacking: false,
         isConversing: false,
         level: 1,
         xp: 0,
         xpToNextLevel: 100,
         job: '없음',
-        facing: 'right', // 바라보는 방향 추가
+        facing: 'right',
         equippedWeapon: null,
-        equippedShield: null, 
+        equippedShield: null,
         skills: [],
         skillCooldowns: {},
         activeQuest: null,
-        questProgress: {},
-        manaRegenTimer: 0, // 마나 회복 타이머
+        questProgress: { slimeKills: 0 },
+        manaRegenTimer: 0,
+        nameColor: '#FFD700',
+        unlockedNameColors: ['#FFD700'],
+        bodyColor: 'linear-gradient(to bottom right, #3a7bd5, #00d2ff)',
+        unlockedBodyColors: ['linear-gradient(to bottom right, #3a7bd5, #00d2ff)'],
     };
 
-    nameTag.textContent = player.name;
+    const nameColorsData = [
+        { name: '기본', color: '#FFD700', cost: 0 },
+        { name: '순백색', color: '#FFFFFF', cost: 1000 },
+        { name: '하늘색', color: '#87CEEB', cost: 1000 },
+        { name: '분홍색', color: '#FFC0CB', cost: 1000 },
+        { name: '에메랄드', color: '#50C878', cost: 2500 },
+        { name: '루비', color: '#E0115F', cost: 5000 },
+    ];
+
+    const bodyColorsData = [
+        { name: '기본', color: 'linear-gradient(to bottom right, #3a7bd5, #00d2ff)', cost: 0 },
+        { name: '에메랄드', color: 'linear-gradient(to bottom right, #00F260, #0575E6)', cost: 2000 },
+        { name: '루비', color: 'linear-gradient(to bottom right, #e52d27, #b31217)', cost: 2000 },
+        { name: '골드', color: 'linear-gradient(to bottom right, #FDB813, #F27022)', cost: 5000 },
+        { name: '그림자', color: 'linear-gradient(to bottom right, #434343, #000000)', cost: 10000 },
+    ];
 
     const questsData = {
         'slimeSlayer': {
@@ -123,21 +137,18 @@ function startGame(playerName) {
     };
 
     const skillsData = {
-        // Tier 1
         '강타': { job: '전사', goldCost: 500, manaCost: 10, damage: 2.5, cooldown: 3000, description: '전방의 적에게 강력한 일격을 날립니다.', tier: 1 },
         '파워샷': { job: '궁수', goldCost: 500, manaCost: 8, damage: 2.0, cooldown: 2000, description: '강화된 화살을 발사합니다.', tier: 1 },
         '파이어볼': { job: '마법사', goldCost: 500, manaCost: 15, damage: 3.0, cooldown: 4000, description: '화염구를 날려 적을 공격합니다.', tier: 1 },
         '발도술': { job: '검사', goldCost: 500, manaCost: 12, damage: 3.5, cooldown: 5000, description: '순간적으로 전방을 빠르게 벱니다.', tier: 1 },
         '퀵샷': { job: '건슬링어', goldCost: 500, manaCost: 5, damage: 1.8, cooldown: 1500, description: '빠르게 총을 발사합니다.', tier: 1 },
         '마나 슬래시': { job: '마검사', goldCost: 500, manaCost: 20, damage: 4.0, cooldown: 6000, description: '마나가 담긴 검기를 날립니다.', tier: 1 },
-        // Tier 2
         '약점 찌르기': { job: '전사', goldCost: 1000, manaCost: 20, damage: 1.5, cooldown: 5000, description: '적의 약점을 찔러 5초간 방어력을 감소시킵니다.', tier: 2, effect: 'defense_down', duration: 5000 },
         '속박의 화살': { job: '궁수', goldCost: 1000, manaCost: 18, damage: 1.2, cooldown: 7000, description: '적을 3초간 이동 불가 상태로 만듭니다.', tier: 2, effect: 'bind', duration: 3000 },
         '라이트닝': { job: '마법사', goldCost: 1000, manaCost: 40, damage: 5.0, cooldown: 8000, description: '강력한 번개를 소환하여 주변의 적들을 공격합니다.', tier: 2, area: 150 },
         '차지 슬래셔': { job: '검사', goldCost: 1000, manaCost: 30, damage: 6.0, cooldown: 10000, description: '기를 모아 전방으로 강력한 참격을 날립니다.', tier: 2, range: 200 },
         '빠른 연사': { job: '건슬링어', goldCost: 1000, manaCost: 15, damage: 1.0, cooldown: 6000, description: '3발의 총알을 빠르게 연사합니다.', tier: 2, shots: 3, interval: 200 },
         '마력 폭발': { job: '마검사', goldCost: 1000, manaCost: 50, damage: 7.0, cooldown: 12000, description: '자신 주변으로 마력을 폭발시켜 모든 적에게 피해를 줍니다.', tier: 2, area: 200 },
-        // 마나 술사 스킬
         '마나 애로우': { job: '마나 술사', goldCost: 500, manaCost: 15, damage: 2.8, cooldown: 3000, description: '응축된 마나 화살을 발사합니다.', tier: 1 },
         '마나 블래스터': { job: '마나 술사', goldCost: 1000, manaCost: 45, damage: 6.5, cooldown: 9000, description: '전방으로 강력한 마나 포를 발사하여 경로상의 모든 적을 관통합니다.', tier: 2, piercing: true },
     };
@@ -160,10 +171,12 @@ function startGame(playerName) {
             level: player.level, xp: player.xp, xpToNextLevel: player.xpToNextLevel,
             gold: player.gold, inventory: player.inventory, 
             equippedWeapon: player.equippedWeapon, equippedShield: player.equippedShield,
-            maxHp: player.maxHp, maxMp: player.maxMp, // maxMp 저장
+            maxHp: player.maxHp, maxMp: player.maxMp,
             baseAttackPower: player.baseAttackPower, baseDefense: player.baseDefense, 
             job: player.job, skills: player.skills,
             activeQuest: player.activeQuest, questProgress: player.questProgress,
+            nameColor: player.nameColor, unlockedNameColors: player.unlockedNameColors,
+            bodyColor: player.bodyColor, unlockedBodyColors: player.unlockedBodyColors,
         };
         localStorage.setItem('rpgPlayerData', JSON.stringify(playerData));
     }
@@ -175,19 +188,22 @@ function startGame(playerName) {
             Object.assign(player, { 
                 ...playerData, 
                 hp: playerData.maxHp, 
-                mp: playerData.maxMp, // mp도 maxMp로 채워서 로드
+                mp: playerData.maxMp,
                 skills: playerData.skills || [],
                 activeQuest: playerData.activeQuest || null,
-                questProgress: playerData.questProgress || {},
+                questProgress: playerData.questProgress || { slimeKills: 0 },
                 equippedShield: playerData.equippedShield || null, 
+                nameColor: playerData.nameColor || '#FFD700',
+                unlockedNameColors: playerData.unlockedNameColors || ['#FFD700'],
+                bodyColor: playerData.bodyColor || 'linear-gradient(to bottom right, #3a7bd5, #00d2ff)',
+                unlockedBodyColors: playerData.unlockedBodyColors || ['linear-gradient(to bottom right, #3a7bd5, #00d2ff)'],
             });
 
             if (player.name) {
-                playerNameEl.textContent = player.name;
-                player.nameTagElement.textContent = player.name;
+                updatePlayerNameDisplay();
             }
+            playerEl.style.backgroundImage = player.bodyColor;
 
-            // 임시 마나 초기화 코드
             if (player.maxMp !== 50) {
                 player.maxMp = 50;
                 player.mp = 50;
@@ -203,7 +219,7 @@ function startGame(playerName) {
     const shopItems = [
         { name: 'HP 포션', price: 50, type: 'potion' }, { name: 'MP 포션', price: 70, type: 'mana-potion', recovery: 20 },
         { name: '낡은 검', price: 100, type: 'sword', power: 5 },
-        { name: '낡은 방패', price: 80, type: 'shield', defense: 5 }, // 낡은 방패 아이템 추가
+        { name: '낡은 방패', price: 80, type: 'shield', defense: 5 },
         { name: '낡은 지팡이', price: 150, type: 'wand', power: 7 }, { name: '낡은 권총', price: 75, type: 'gun', power: 4 },
         { name: '낡은 활', price: 120, type: 'bow', power: 6 }, { name: '카타나', price: 110, type: 'katana', power: 5 },
     ];
@@ -212,7 +228,7 @@ function startGame(playerName) {
         { name: '월광 대검', price: 5000, type: 'sword', power: 25 },
         { name: '속삭이는 활', price: 4500, type: 'bow', power: 22 },
         { name: '멸망의 오브', price: 6000, type: 'wand', power: 30 },
-        { name: '마나 지팡이', price: 6500, type: 'wand', power: 35, exclusive: '마나 술사' }, // 마나 술사 전용 무기
+        { name: '마나 지팡이', price: 6500, type: 'wand', power: 35, exclusive: '마나 술사' },
         { name: '그림자 단검', price: 4000, type: 'katana', power: 20 },
         { name: '드래곤 슬레이어', price: 7500, type: 'gun', power: 28 },
     ];
@@ -225,11 +241,8 @@ function startGame(playerName) {
 
     function createWorld() {
         const housePositions = [
-            // 왼쪽 줄
             { x: 1300, y: 1100 }, { x: 1300, y: 1350 }, { x: 1300, y: 1600 }, { x: 1300, y: 1850 },
-            // 오른쪽 줄
             { x: 1700, y: 1100 }, { x: 1700, y: 1350 }, { x: 1700, y: 1600 }, { x: 1700, y: 1850 },
-            // 외곽 집
             { x: 1050, y: 1250 }, { x: 1950, y: 1250 }
         ];
         housePositions.forEach(pos => {
@@ -316,12 +329,21 @@ function startGame(playerName) {
         questGiver.element.appendChild(questGiverNameTag);
         backgroundLayer.appendChild(questGiver.element);
 
+        titleShrine = { element: document.createElement('div') };
+        titleShrine.element.id = 'title-shrine';
+        titleShrine.element.style.left = '1970px';
+        titleShrine.element.style.top = '1520px';
+        backgroundLayer.appendChild(titleShrine.element);
+
+        appearanceMirror = { element: document.createElement('div') };
+        appearanceMirror.element.id = 'appearance-mirror';
+        appearanceMirror.element.style.left = '1920px';
+        appearanceMirror.element.style.top = '1520px';
+        backgroundLayer.appendChild(appearanceMirror.element);
+
         const pathSegments = [
-            // Main Street
             { x: 1475, y: 1050, width: 200, height: 1000 },
-            // Plaza in front of shop
             { x: 1425, y: 1050, width: 300, height: 100 },
-            // Side paths to outer houses
             { x: 1150, y: 1300, width: 325, height: 50 },
             { x: 1675, y: 1300, width: 325, height: 50 },
         ];
@@ -334,50 +356,33 @@ function startGame(playerName) {
         });
 
         const treePositions = [
-            // 마을 왼쪽 숲
             { x: 1050, y: 1050 }, { x: 1150, y: 1150 }, { x: 1050, y: 1450 }, 
             { x: 1150, y: 1550 }, { x: 1050, y: 1750 }, { x: 1150, y: 1850 },
-            // 마을 오른쪽 숲
             { x: 1900, y: 1050 }, { x: 1800, y: 1150 }, { x: 1900, y: 1450 },
             { x: 1800, y: 1550 }, { x: 1900, y: 1750 }, { x: 1800, y: 1850 },
         ];
         treePositions.forEach(pos => createTree(pos.x, pos.y));
 
-        // 잡초 생성
-        const grassPositions = [];
         for (let i = 0; i < 50; i++) {
-            // 마을 주변에 무작위로 배치
-            grassPositions.push({ x: 1000 + Math.random() * 1200, y: 900 + Math.random() * 1300 });
-        }
-        grassPositions.forEach(pos => {
             const grassEl = document.createElement('div');
             grassEl.className = 'grass-patch';
             grassEl.textContent = '^^';
-            grassEl.style.left = `${pos.x}px`;
-            grassEl.style.top = `${pos.y}px`;
-            // 길 위에는 잡초가 덜 보이도록 조정
-            if (pathSegments.some(seg => pos.x > seg.x && pos.x < seg.x + seg.width && pos.y > seg.y && pos.y < seg.y + seg.height)) {
-                 grassEl.style.opacity = '0.6';
-            }
+            grassEl.style.left = `${1000 + Math.random() * 1200}px`;
+            grassEl.style.top = `${900 + Math.random() * 1300}px`;
             backgroundLayer.appendChild(grassEl);
-        });
+        }
 
         for (let i = 0; i < 4; i++) createNpc();
 
-        // 기본 사냥터
         const area = { x: 3000, y: 500, width: 1000, height: 2000 };
         for (let i = 0; i < 15; i++) createMonster(area);
         
         const fenceSegments = [
-            // Top (with exit to harder area)
             { x: area.x, y: area.y, width: (area.width / 2) - 50, height: 20 },
             { x: area.x + (area.width / 2) + 50, y: area.y, width: (area.width / 2) - 50, height: 20 },
-            // Bottom
             { x: area.x, y: area.y + area.height - 20, width: area.width, height: 20 },
-            // Left (with entrance from village)
             { x: area.x, y: area.y, width: 20, height: (area.height / 2) - 75 },
             { x: area.x, y: area.y + (area.height / 2) + 75, width: 20, height: (area.height / 2) - 75 },
-            // Right
             { x: area.x + area.width - 20, y: area.y, width: 20, height: area.height },
         ];
         fenceSegments.forEach(seg => {
@@ -389,40 +394,31 @@ function startGame(playerName) {
             obstacles.push(fenceEl);
         });
 
-        // ... (기존 월드 생성 코드)
-
-        // 히든 상점 생성
         const hiddenShopEl = document.createElement('div');
         hiddenShopEl.className = 'hidden-shop';
         hiddenShopEl.style.left = '1050px';
-        hiddenShopEl.style.top = '1600px'; // 석공 위쪽 나무(1050, 1750)의 위
+        hiddenShopEl.style.top = '1600px';
         backgroundLayer.appendChild(hiddenShopEl);
         obstacles.push(hiddenShopEl);
 
         hiddenMerchant = { element: document.createElement('div'), type: 'hiddenMerchant' };
         hiddenMerchant.element.className = 'hidden-merchant';
         hiddenMerchant.element.style.left = '1083px';
-        hiddenMerchant.element.style.top = '1680px'; // 상점 바로 앞
+        hiddenMerchant.element.style.top = '1680px';
         const hiddenMerchantNameTag = document.createElement('div');
         hiddenMerchantNameTag.className = 'npc-name-tag';
         hiddenMerchantNameTag.textContent = dialogueData.hiddenMerchant.name;
         hiddenMerchant.element.appendChild(hiddenMerchantNameTag);
         backgroundLayer.appendChild(hiddenMerchant.element);
 
-        // 상급 사냥터
         const harderArea = { x: 3000, y: -1600, width: 1000, height: 1500 };
         for (let i = 0; i < 10; i++) createHarderMonster(harderArea);
-        // ... (기존 월드 생성 코드)
 
         const harderFenceSegments = [
-            // Top
             { x: harderArea.x, y: harderArea.y, width: harderArea.width, height: 20 },
-            // Bottom (with entrance from normal area)
             { x: harderArea.x, y: harderArea.y + harderArea.height - 20, width: (harderArea.width / 2) - 50, height: 20 },
             { x: harderArea.x + (harderArea.width / 2) + 50, y: harderArea.y + harderArea.height - 20, width: (harderArea.width / 2) - 50, height: 20 },
-            // Left
             { x: harderArea.x, y: harderArea.y, width: 20, height: harderArea.height },
-            // Right
             { x: harderArea.x + harderArea.width - 20, y: harderArea.y, width: 20, height: harderArea.height },
         ];
         harderFenceSegments.forEach(seg => {
@@ -430,7 +426,7 @@ function startGame(playerName) {
             fenceEl.className = 'fence';
             fenceEl.style.left = `${seg.x}px`; fenceEl.style.top = `${seg.y}px`;
             fenceEl.style.width = `${seg.width}px`; fenceEl.style.height = `${seg.height}px`;
-            fenceEl.style.backgroundColor = '#A0522D'; // 다른 색 울타리
+            fenceEl.style.backgroundColor = '#A0522D';
             backgroundLayer.appendChild(fenceEl);
             obstacles.push(fenceEl);
         });
@@ -441,13 +437,10 @@ function startGame(playerName) {
         treeEl.className = 'tree';
         treeEl.style.left = `${x}px`;
         treeEl.style.top = `${y}px`;
-
         const trunk = document.createElement('div');
         trunk.className = 'tree-trunk';
-        
         const leaves = document.createElement('div');
         leaves.className = 'tree-leaves';
-
         treeEl.appendChild(leaves);
         treeEl.appendChild(trunk);
         backgroundLayer.appendChild(treeEl);
@@ -493,7 +486,7 @@ function startGame(playerName) {
     function createNpc() {
         const npcEl = document.createElement('div');
         npcEl.className = 'npc';
-        const villageArea = { x: 1475, y: 1250, width: 200, height: 750 }; // Main street area
+        const villageArea = { x: 1475, y: 1250, width: 200, height: 750 };
         const npc = {
             element: npcEl, type: 'npc',
             x: villageArea.x + Math.random() * (villageArea.width - 30), y: villageArea.y + Math.random() * (villageArea.height - 30),
@@ -501,12 +494,10 @@ function startGame(playerName) {
             speed: 1, direction: null,
         };
         npc.element.style.left = `${npc.x}px`; npc.element.style.top = `${npc.y}px`;
-
         const nameTag = document.createElement('div');
         nameTag.className = 'npc-name-tag';
         nameTag.textContent = dialogueData.npc.name;
         npc.element.appendChild(nameTag);
-
         backgroundLayer.appendChild(npc.element);
         const thingsToAvoid = [...obstacles, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, questGiver.element, ...npcs.map(n => n.element)];
         if (thingsToAvoid.some(thing => thing && isColliding(npc.element, thing))) {
@@ -519,22 +510,18 @@ function startGame(playerName) {
 
     function respawnMonster() {
         setTimeout(() => {
-            const slimeCount = monsters.filter(m => m.type === 'slime').length;
-            if (slimeCount < 15) {
-                const area = { x: 3000, y: 500, width: 1000, height: 2000 };
-                createMonster(area);
+            if (monsters.filter(m => m.type === 'slime').length < 15) {
+                createMonster({ x: 3000, y: 500, width: 1000, height: 2000 });
             }
         }, 5000);
     }
 
     function respawnHarderMonster() {
         setTimeout(() => {
-            const golemCount = monsters.filter(m => m.type === 'golem').length;
-            if (golemCount < 10) {
-                const area = { x: 3000, y: -1600, width: 1000, height: 1500 };
-                createHarderMonster(area);
+            if (monsters.filter(m => m.type === 'golem').length < 10) {
+                createHarderMonster({ x: 3000, y: -1600, width: 1000, height: 1500 });
             }
-        }, 8000); // 리스폰 시간 약간 길게
+        }, 8000);
     }
 
     function gainXp(amount) {
@@ -550,7 +537,7 @@ function startGame(playerName) {
         player.xpToNextLevel = Math.floor(player.xpToNextLevel * 1.5);
         player.maxHp += 20;
         player.hp = player.maxHp;
-        player.maxMp += 10; // 레벨업 시 최대 마나 10 증가
+        player.maxMp += 10;
         player.mp = player.maxMp;
         player.baseAttackPower += 2;
         player.baseDefense += 1; 
@@ -579,32 +566,19 @@ function startGame(playerName) {
         const existingShield = player.element.querySelector('.player-shield');
         if (existingShield) existingShield.remove();
 
-        // 무기 처리
         if (player.equippedWeapon) {
             const weaponEl = document.createElement('div');
             weaponEl.className = `player-weapon ${player.equippedWeapon.type}`;
             
-            // 전용 무기를 위한 클래스 추가
-            if (player.equippedWeapon.name === '마나 지팡이') {
-                weaponEl.classList.add('mana-staff');
-            } else if (player.equippedWeapon.name === '멸망의 오브') {
-                weaponEl.classList.add('orb-of-destruction');
-            } else if (player.equippedWeapon.name === '그림자 단검') {
-                weaponEl.classList.add('shadow-dagger');
-            } else if (player.equippedWeapon.name === '월광 대검') {
-                weaponEl.classList.add('moonlight-greatsword');
-            } else if (player.equippedWeapon.name === '속삭이는 활') {
-                weaponEl.classList.add('whispering-bow');
-            } else if (player.equippedWeapon.name === '드래곤 슬레이어') {
-                weaponEl.classList.add('dragon-slayer');
-            }
+            if (player.equippedWeapon.name === '마나 지팡이') weaponEl.classList.add('mana-staff');
+            else if (player.equippedWeapon.name === '멸망의 오브') weaponEl.classList.add('orb-of-destruction');
+            else if (player.equippedWeapon.name === '그림자 단검') weaponEl.classList.add('shadow-dagger');
+            else if (player.equippedWeapon.name === '월광 대검') weaponEl.classList.add('moonlight-greatsword');
+            else if (player.equippedWeapon.name === '속삭이는 활') weaponEl.classList.add('whispering-bow');
+            else if (player.equippedWeapon.name === '드래곤 슬레이어') weaponEl.classList.add('dragon-slayer');
 
-            // 방향에 따른 클래스 추가
-            if (player.facing === 'left') {
-                weaponEl.classList.add('facing-left');
-            } else {
-                weaponEl.classList.add('facing-right');
-            }
+            if (player.facing === 'left') weaponEl.classList.add('facing-left');
+            else weaponEl.classList.add('facing-right');
 
             if (player.equippedWeapon.type === 'bow') {
                 const bowLimb = document.createElement('div'); bowLimb.className = 'bow-limb';
@@ -613,28 +587,20 @@ function startGame(playerName) {
             }
             player.element.appendChild(weaponEl);
 
-            // 검사 칼집 처리
             if (player.job === '검사' && player.equippedWeapon.type === 'katana') {
                 const sheathEl = document.createElement('div');
                 sheathEl.className = 'katana-sheath';
-                if (player.facing === 'left') {
-                    sheathEl.classList.add('facing-left');
-                } else {
-                    sheathEl.classList.add('facing-right');
-                }
+                if (player.facing === 'left') sheathEl.classList.add('facing-left');
+                else sheathEl.classList.add('facing-right');
                 player.element.appendChild(sheathEl);
             }
         }
 
-        // 방패 처리
         if (player.equippedShield) {
             const shieldEl = document.createElement('div');
             shieldEl.className = 'player-shield';
-             if (player.facing === 'left') {
-                shieldEl.classList.add('facing-left');
-            } else {
-                shieldEl.classList.add('facing-right');
-            }
+             if (player.facing === 'left') shieldEl.classList.add('facing-left');
+            else shieldEl.classList.add('facing-right');
             player.element.appendChild(shieldEl);
         }
     }
@@ -644,20 +610,14 @@ function startGame(playerName) {
         let bestShield = null;
         const allItems = [...shopItems, ...hiddenShopItems];
 
-        // 직업에 맞는 장비만 필터링
         const usableItems = player.inventory
             .map(itemName => allItems.find(shopItem => shopItem.name === itemName))
             .filter(item => {
-                if (!item) return false;
-                if (player.job === '없음') return false;
-
-                if (item.exclusive) {
-                    return player.job === item.exclusive;
-                }
-
+                if (!item || player.job === '없음') return false;
+                if (item.exclusive) return player.job === item.exclusive;
                 switch (item.type) {
                     case 'sword': return ['전사', '마검사'].includes(player.job);
-                    case 'wand':  return ['마법사', '마검사', '아이스'].includes(player.job); // 마나 술사 제외
+                    case 'wand':  return ['마법사', '마검사', '아이스'].includes(player.job);
                     case 'gun':   return ['건슬링어'].includes(player.job);
                     case 'bow':   return ['궁수'].includes(player.job);
                     case 'katana':return ['검사'].includes(player.job);
@@ -667,23 +627,13 @@ function startGame(playerName) {
             });
 
         for (const item of usableItems) {
-            if (item.power && (!bestWeapon || item.power > bestWeapon.power)) {
-                bestWeapon = item;
-            }
-            if (item.defense && (!bestShield || item.defense > bestShield.defense)) {
-                bestShield = item;
-            }
+            if (item.power && (!bestWeapon || item.power > bestWeapon.power)) bestWeapon = item;
+            if (item.defense && (!bestShield || item.defense > bestShield.defense)) bestShield = item;
         }
 
         let equippedSomething = false;
-        if (bestWeapon) {
-            player.equippedWeapon = bestWeapon;
-            equippedSomething = true;
-        }
-        if (bestShield) {
-            player.equippedShield = bestShield;
-            equippedSomething = true;
-        }
+        if (bestWeapon) { player.equippedWeapon = bestWeapon; equippedSomething = true; }
+        if (bestShield) { player.equippedShield = bestShield; equippedSomething = true; }
 
         if (equippedSomething) {
             updateAttackPower();
@@ -701,48 +651,40 @@ function startGame(playerName) {
             gainXp(monster.xpValue);
             player.gold += monster.goldValue;
 
+            if (monster.type === 'slime') {
+                player.questProgress.slimeKills = (player.questProgress.slimeKills || 0) + 1;
+            }
+
             if (player.activeQuest) {
                 const quest = questsData[player.activeQuest];
                 if (quest.target === monster.type) {
                     player.questProgress[quest.target] = (player.questProgress[quest.target] || 0) + 1;
                     updateQuestUI();
-                    savePlayerData(); // 퀘스트 진행도 즉시 저장
+                    savePlayerData();
                 }
             }
         }
 
         monster.element.remove();
         const index = monsters.indexOf(monster);
-        if (index > -1) {
-            monsters.splice(index, 1);
-        }
+        if (index > -1) monsters.splice(index, 1);
         
-        if (monster.type === 'slime') {
-            respawnMonster();
-        } else if (monster.type === 'golem') {
-            respawnHarderMonster();
-        }
+        if (monster.type === 'slime') respawnMonster();
+        else if (monster.type === 'golem') respawnHarderMonster();
     }
 
     function takeDamage(monster, damage) {
         let finalDamage = damage;
-        const defenseDown = monster.effects.find(e => e.type === 'defense_down');
-        if (defenseDown) {
-            finalDamage *= 1.5; // 방어력 감소 시 50% 추가 데미지
-        }
-
+        if (monster.effects.some(e => e.type === 'defense_down')) finalDamage *= 1.5;
         monster.hp -= finalDamage;
         
-        if (monster.hp <= 0) {
-            handleMonsterKill(monster);
-        } else {
-            monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
-        }
+        if (monster.hp <= 0) handleMonsterKill(monster);
+        else monster.healthBar.style.width = `${(monster.hp / monster.maxHp) * 100}%`;
     }
 
     function playerAttack() {
         if (player.isAttacking || player.isConversing) return;
-        if (['건슬링어', '마법사', '궁수', '마나 술사'].includes(player.job)) { // 마나 술사 추가
+        if (['건슬링어', '마법사', '궁수', '마나 술사'].includes(player.job)) {
             fireProjectile();
         } else {
             player.isAttacking = true;
@@ -765,12 +707,9 @@ function startGame(playerName) {
                 width: `${hitboxRect.width}px`, height: `${hitboxRect.height}px`
             });
             backgroundLayer.appendChild(attackEffect);
-            for (let i = monsters.length - 1; i >= 0; i--) {
-                const monster = monsters[i];
-                if (isColliding(attackEffect, monster.element)) {
-                    takeDamage(monster, player.attackPower);
-                }
-            }
+            monsters.forEach(monster => {
+                if (isColliding(attackEffect, monster.element)) takeDamage(monster, player.attackPower);
+            });
             setTimeout(() => {
                 attackEffect.remove();
                 player.isAttacking = false;
@@ -783,22 +722,16 @@ function startGame(playerName) {
         const projectileEl = document.createElement('div');
         projectileEl.className = 'projectile';
         
-        let projectileType = '', 
-            speed = 8, 
-            range = 300, 
-            damage = player.attackPower,
-            effect = null,
-            duration = 0;
-        let skillInfo = {}; // skillInfo 변수 선언 및 초기화
+        let projectileType = '', speed = 8, range = 300, damage = player.attackPower, effect = null, duration = 0;
+        let skillInfo = {};
 
         if (skillName) {
-            skillInfo = skillsData[skillName]; // skillInfo에 스킬 데이터 할당
+            skillInfo = skillsData[skillName];
             damage = player.attackPower * skillInfo.damage;
             if (skillInfo.effect) {
                 effect = skillInfo.effect;
                 duration = skillInfo.duration;
             }
-
             if (skillName === '파이어볼') projectileType = 'fireball';
             else if (skillName === '파워샷') projectileType = 'power-shot';
             else if (skillName === '퀵샷') projectileType = 'quick-shot';
@@ -807,11 +740,10 @@ function startGame(playerName) {
             else if (skillName === '빠른 연사') projectileType = 'bullet';
             else if (skillName === '마나 애로우') projectileType = 'mana-arrow';
             else if (skillName === '마나 블래스터') projectileType = 'mana-blaster';
-
         } else {
             if (player.job === '건슬링어') projectileType = 'bullet';
             else if (player.job === '마법사') projectileType = 'magic-missile';
-            else if (player.job === '마나 술사') projectileType = 'mana-bolt'; // 마나 볼트 타입 추가
+            else if (player.job === '마나 술사') projectileType = 'mana-bolt';
             else if (player.job === '궁수') projectileType = 'arrow';
         }
 
@@ -824,8 +756,8 @@ function startGame(playerName) {
             direction: player.direction, 
             speed, range, traveled: 0, damage,
             effect, duration,
-            piercing: !!skillInfo.piercing, // 관통 속성 추가
-            hitMonsters: [], // 관통 시 이미 맞은 몬스터 목록
+            piercing: !!skillInfo.piercing,
+            hitMonsters: [],
             ...options
         };
 
@@ -887,8 +819,8 @@ function startGame(playerName) {
                 btn1.onclick = () => {
                     if (confirm("진정으로 '마나 술사'의 길을 걷겠습니까? 이 선택은 되돌릴 수 없습니다.")) {
                         player.job = '마나 술사';
-                        player.skills = []; // 기존 스킬 초기화
-                        player.maxMp = Math.floor(player.maxMp * 1.5); // 최대 마나 50% 증가
+                        player.skills = [];
+                        player.maxMp = Math.floor(player.maxMp * 1.5);
                         player.mp = player.maxMp;
                         alert("'마나 술사'로 전직했습니다! 최대 마나가 대폭 상승합니다.");
                         updateUI();
@@ -903,7 +835,7 @@ function startGame(playerName) {
                 btn2.onclick = () => {
                      if (confirm("진정으로 '아이스'의 길을 걷겠습니까? 이 선택은 되돌릴 수 없습니다.")) {
                         player.job = '아이스';
-                        player.skills = []; // 기존 스킬 초기화
+                        player.skills = [];
                         alert("'아이스'로 전직했습니다!");
                         updateUI();
                         savePlayerData();
@@ -946,19 +878,11 @@ function startGame(playerName) {
 
         let skillToLearn = null;
 
-        if (!hasTier1 && tier1Skill) {
-            skillToLearn = tier1Skill;
-        } else if (hasTier1 && !hasTier2 && tier2Skill) {
-            skillToLearn = tier2Skill;
-        } else {
-            alert("이미 모든 스킬을 배웠습니다.");
-            return;
-        }
+        if (!hasTier1 && tier1Skill) skillToLearn = tier1Skill;
+        else if (hasTier1 && !hasTier2 && tier2Skill) skillToLearn = tier2Skill;
+        else { alert("이미 모든 스킬을 배웠습니다."); return; }
 
-        if (!skillToLearn) {
-            alert("이 직업은 배울 수 있는 스킬이 없습니다.");
-            return;
-        }
+        if (!skillToLearn) { alert("이 직업은 배울 수 있는 스킬이 없습니다."); return; }
 
         const [skillName, skillInfo] = skillToLearn;
 
@@ -971,11 +895,9 @@ function startGame(playerName) {
 
 ${skillInfo.description}
 가격: ${skillInfo.goldCost} G
-마나 소모: ${skillInfo.manaCost}`
-)) {
+마나 소모: ${skillInfo.manaCost}`)) {
             player.gold -= skillInfo.goldCost;
             player.skills.push(skillName);
-            // 티어에 맞게 정렬하여 항상 1티어 스킬이 앞으로 오게 함
             player.skills.sort((a, b) => (skillsData[a].tier || 0) - (skillsData[b].tier || 0));
             alert(`'${skillName}' 스킬을 배웠습니다!`);
             savePlayerData();
@@ -984,7 +906,6 @@ ${skillInfo.description}
     }
 
     function applyEffect(monster, effect, duration) {
-        // 기존에 같은 효과가 있다면 제거
         const existingEffectIndex = monster.effects.findIndex(e => e.type === effect);
         if (existingEffectIndex > -1) {
             clearTimeout(monster.effects[existingEffectIndex].timeoutId);
@@ -997,9 +918,7 @@ ${skillInfo.description}
 
         const timeoutId = setTimeout(() => {
             const effectIndex = monster.effects.findIndex(e => e.type === effect);
-            if (effectIndex > -1) {
-                monster.effects.splice(effectIndex, 1);
-            }
+            if (effectIndex > -1) monster.effects.splice(effectIndex, 1);
             effectIndicator.remove();
         }, duration);
 
@@ -1015,33 +934,25 @@ ${skillInfo.description}
         const skillInfo = skillsData[skillName];
         const now = Date.now();
 
-        if (player.mp < skillInfo.manaCost) {
-            // TODO: 마나 부족 시각적 효과 (예: 화면 깜빡임)
-            return; // Mana not enough
-        }
-
-        if (now - (player.skillCooldowns[skillName] || 0) < skillInfo.cooldown) {
-            return; // Cooldown active
-        }
+        if (player.mp < skillInfo.manaCost) return;
+        if (now - (player.skillCooldowns[skillName] || 0) < skillInfo.cooldown) return;
 
         player.mp -= skillInfo.manaCost;
         player.skillCooldowns[skillName] = now;
-        updateUI(); // 마나 소모 후 즉시 UI 업데이트
+        updateUI();
 
         let attackEffect, playerRect, hitboxRect, backgroundRect;
-
         playerRect = player.element.getBoundingClientRect();
         backgroundRect = backgroundLayer.getBoundingClientRect();
 
         switch (skillName) {
-            // --- Tier 1 ---
             case '강타':
             case '발도술':
                 player.isAttacking = true;
                 attackEffect = document.createElement('div');
                 attackEffect.className = 'attack-effect';
                 let t1_range, t1_duration, t1_effectClass;
-                if (skillName === '발도술') { t1_range = 150; t1_duration = 250; t1_effectClass = 'baldosul-slash-effect'; }
+                if (skillName === '발도술') { t1_range = 150; t1_duration = 250; t1_effectClass = 'baldosul-slash-effect'; } 
                 else { t1_range = 80; t1_duration = 200; t1_effectClass = 'gangta-effect'; }
                 attackEffect.classList.add(t1_effectClass);
                 
@@ -1056,12 +967,9 @@ ${skillInfo.description}
                 });
                 backgroundLayer.appendChild(attackEffect);
 
-                for (let i = monsters.length - 1; i >= 0; i--) {
-                    const monster = monsters[i];
-                    if (isColliding(attackEffect, monster.element)) {
-                        takeDamage(monster, player.attackPower * skillInfo.damage);
-                    }
-                }
+                monsters.forEach(monster => {
+                    if (isColliding(attackEffect, monster.element)) takeDamage(monster, player.attackPower * skillInfo.damage);
+                });
                 setTimeout(() => {
                     attackEffect.remove();
                     player.isAttacking = false;
@@ -1073,7 +981,6 @@ ${skillInfo.description}
                 fireProjectile(skillName);
                 break;
 
-            // --- Tier 2 ---
             case '약점 찌르기':
             case '차지 슬래셔':
                 player.isAttacking = true;
@@ -1083,7 +990,7 @@ ${skillInfo.description}
 
                 if (skillName === '차지 슬래셔') {
                     t2_range = skillInfo.range; t2_duration = 400; t2_effectClass = 'charge-slasher-effect';
-                } else { // 약점 찌르기
+                } else {
                     t2_range = 90; t2_duration = 250; t2_effectClass = 'weakness-poke-effect';
                 }
                 attackEffect.classList.add(t2_effectClass);
@@ -1099,15 +1006,12 @@ ${skillInfo.description}
                 });
                 backgroundLayer.appendChild(attackEffect);
 
-                for (let i = monsters.length - 1; i >= 0; i--) {
-                    const monster = monsters[i];
+                monsters.forEach(monster => {
                     if (isColliding(attackEffect, monster.element)) {
                         takeDamage(monster, player.attackPower * skillInfo.damage);
-                        if (skillInfo.effect) {
-                            applyEffect(monster, skillInfo.effect, skillInfo.duration);
-                        }
+                        if (skillInfo.effect) applyEffect(monster, skillInfo.effect, skillInfo.duration);
                     }
-                }
+                });
                 setTimeout(() => {
                     attackEffect.remove();
                     player.isAttacking = false;
@@ -1134,7 +1038,7 @@ ${skillInfo.description}
                 player.isAttacking = true;
                 let closestMonster = null;
                 let minDistance = Infinity;
-                const lightningRange = 400; // 라이트닝 스킬의 최대 사거리
+                const lightningRange = 400;
 
                 monsters.forEach(monster => {
                     const dx = player.x - monster.x;
@@ -1152,15 +1056,13 @@ ${skillInfo.description}
                     
                     Object.assign(attackEffect.style, {
                         left: `${closestMonster.x + closestMonster.element.offsetWidth / 2 - 15}px`,
-                        top: `${closestMonster.y - 100}px`, // 몬스터 위에서 떨어지는 효과
+                        top: `${closestMonster.y - 100}px`,
                     });
                     backgroundLayer.appendChild(attackEffect);
                     
                     takeDamage(closestMonster, player.attackPower * skillInfo.damage);
 
-                    setTimeout(() => {
-                        attackEffect.remove();
-                    }, 300);
+                    setTimeout(() => { attackEffect.remove(); }, 300);
                 }
                 
                 setTimeout(() => { player.isAttacking = false; }, 300);
@@ -1175,21 +1077,19 @@ ${skillInfo.description}
                 const effectSize = area * 2;
                 
                 Object.assign(attackEffect.style, {
-                    left: `${player.x + player.width/2 - area}px`, 
+                    left: `${player.x + player.width/2 - area}px`,
                     top: `${player.y + player.height/2 - area}px`,
                     width: `${effectSize}px`, height: `${effectSize}px`
                 });
                 backgroundLayer.appendChild(attackEffect);
 
-                for (let i = monsters.length - 1; i >= 0; i--) {
-                    const monster = monsters[i];
+                monsters.forEach(monster => {
                     const dx = (player.x + player.width/2) - (monster.x + monster.element.offsetWidth/2);
                     const dy = (player.y + player.height/2) - (monster.y + monster.element.offsetHeight/2);
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < area) {
+                    if (Math.sqrt(dx * dx + dy * dy) < area) {
                         takeDamage(monster, player.attackPower * skillInfo.damage);
                     }
-                }
+                });
 
                 setTimeout(() => {
                     attackEffect.remove();
@@ -1228,9 +1128,7 @@ ${skillInfo.description}
                 canBuy = item.type === 'potion' || item.type === 'mana-potion';
             } else {
                 switch (item.type) {
-                    case 'potion':
-                    case 'mana-potion':
-                         canBuy = true; break;
+                    case 'potion': case 'mana-potion': canBuy = true; break;
                     case 'sword': canBuy = ['전사', '마검사'].includes(player.job); break;
                     case 'wand': canBuy = ['마법사', '마검사', '마나 술사', '아이스'].includes(player.job); break;
                     case 'gun': canBuy = ['건슬링어'].includes(player.job); break;
@@ -1266,11 +1164,9 @@ ${skillInfo.description}
         playerHpEl.textContent = Math.ceil(player.hp);
         playerMaxHpEl.textContent = player.maxHp;
         playerHealthBarEl.style.width = `${(player.hp / player.maxHp) * 100}%`;
-
         playerMpEl.textContent = Math.ceil(player.mp);
         playerMaxMpEl.textContent = player.maxMp;
         playerMpBarEl.style.width = `${(player.mp / player.maxMp) * 100}%`;
-
         playerLevelEl.textContent = player.level;
         playerXpEl.textContent = player.xp;
         playerXpNeededEl.textContent = player.xpToNextLevel;
@@ -1309,10 +1205,7 @@ ${skillInfo.description}
             if (keysPressed['d']) { moveX = playerSpeed; player.direction = 'd'; player.facing = 'right'; }
         }
 
-        // 바라보는 방향이 바뀌었을 때만 비주얼 업데이트
-        if (player.facing !== prevFacing) {
-            updatePlayerVisuals();
-        }
+        if (player.facing !== prevFacing) updatePlayerVisuals();
 
         if (moveX !== 0 || moveY !== 0) {
             player.x += moveX;
@@ -1327,12 +1220,9 @@ ${skillInfo.description}
             player.element.style.top = `${player.y}px`;
         }
 
-        // 마나 자연 회복
         player.manaRegenTimer++;
-        if (player.manaRegenTimer >= 60) { // 60프레임(약 1초)마다 회복
-            if (player.mp < player.maxMp) {
-                player.mp = Math.min(player.maxMp, player.mp + 1); // 1초에 1씩 회복
-            }
+        if (player.manaRegenTimer >= 60) {
+            if (player.mp < player.maxMp) player.mp = Math.min(player.maxMp, player.mp + 1);
             player.manaRegenTimer = 0;
         }
 
@@ -1362,17 +1252,10 @@ ${skillInfo.description}
             }
         });
 
-        const aggroRange = 250;
         monsters.forEach(monster => {
-            // 상태 효과에 따른 이동 제한
-            const isBound = monster.effects.some(e => e.type === 'bind');
-            if (isBound) {
-                return; // 이동 불가
-            }
-
+            if (monster.effects.some(e => e.type === 'bind')) return;
             const dx = player.x - monster.x, dy = player.y - monster.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < aggroRange) {
+            if (Math.sqrt(dx * dx + dy * dy) < 250) {
                 const angle = Math.atan2(dy, dx);
                 monster.x += Math.cos(angle) * monster.speed;
                 monster.y += Math.sin(angle) * monster.speed;
@@ -1394,21 +1277,12 @@ ${skillInfo.description}
             }
             for (let j = monsters.length - 1; j >= 0; j--) {
                 const monster = monsters[j];
-                if (p.hitMonsters.includes(monster)) continue; // 이미 맞은 몬스터는 통과
-
+                if (p.hitMonsters.includes(monster)) continue;
                 if (isColliding(p.element, monster.element)) {
                     takeDamage(monster, p.damage);
-                    if (p.effect) {
-                        applyEffect(monster, p.effect, p.duration);
-                    }
-
-                    if (p.piercing) {
-                        p.hitMonsters.push(monster); // 맞은 몬스터 목록에 추가
-                    } else {
-                        p.element.remove(); 
-                        projectiles.splice(i, 1);
-                        break; 
-                    }
+                    if (p.effect) applyEffect(monster, p.effect, p.duration);
+                    if (p.piercing) p.hitMonsters.push(monster);
+                    else { p.element.remove(); projectiles.splice(i, 1); break; }
                 }
             }
         }
@@ -1416,11 +1290,10 @@ ${skillInfo.description}
         for (let i = monsters.length - 1; i >= 0; i--) {
             const monster = monsters[i];
             if (isColliding(player.element, monster.element)) {
-                const damageTaken = Math.max(1, 10 - player.defense); // 방어력 적용
-                player.hp -= damageTaken;
-                handleMonsterKill(monster, false); // 보상 없이 몬스터 제거
+                player.hp -= Math.max(1, 10 - player.defense);
+                handleMonsterKill(monster, false);
                 if (player.hp <= 0) {
-                    player.hp = 0; // HP가 음수가 되지 않도록
+                    player.hp = 0;
                     isGameOver = true;
                     savePlayerData();
                     gameOverScreen.classList.remove('hidden');
@@ -1430,9 +1303,7 @@ ${skillInfo.description}
         }
 
         updateUI();
-        const cameraX = -player.x + (window.innerWidth / 2);
-        const cameraY = -player.y + (window.innerHeight / 2);
-        backgroundLayer.style.transform = `translate(${cameraX}px, ${cameraY}px)`;
+        backgroundLayer.style.transform = `translate(${-player.x + window.innerWidth / 2}px, ${-player.y + window.innerHeight / 2}px)`;
         gameLoopTimeout = requestAnimationFrame(gameLoop);
     }
 
@@ -1447,17 +1318,26 @@ ${skillInfo.description}
         if (player.isConversing) return;
 
         if (key === 'f') {
+            let interacted = false;
             const allNpcs = [shopkeeper, jobChanger, skillMaster, jobResetter, levelResetter, questGiver, hiddenJobMaster, hiddenMerchant, ...npcs].filter(Boolean);
             for (const npc of allNpcs) {
                 if (npc && npc.element && isColliding(player.element, npc.element)) {
                     showDialogue(npc);
+                    interacted = true;
                     break;
                 }
+            }
+
+            if (!interacted && titleShrine && isColliding(player.element, titleShrine.element)) {
+                openNameDecorator();
+            }
+            if (!interacted && appearanceMirror && isColliding(player.element, appearanceMirror.element)) {
+                openBodyColorChanger();
             }
         }
         if (key === 'e') equipBestGear();
         if (key === 'q') usePotion();
-        if (key === 'r') useManaPotion(); // R키로 마나 포션 사용
+        if (key === 'r') useManaPotion();
         if (key === '1') useSkill(1);
         if (key === '2') useSkill(2);
         if (key === '7') {
@@ -1502,12 +1382,12 @@ ${skillInfo.description}
             Object.assign(player, {
                 level: 1, xp: 0, xpToNextLevel: 100, 
                 maxHp: 100, hp: 100,
-                maxMp: 50, mp: 50, // MP 초기화
+                maxMp: 50, mp: 50,
                 baseAttackPower: 5, baseDefense: 0, 
                 job: '없음', inventory: [], 
                 equippedWeapon: null, equippedShield: null, 
                 skills: [],
-                activeQuest: null, questProgress: {}
+                activeQuest: null, questProgress: { slimeKills: 0 }
             });
             updateAttackPower();
             updateDefense();
@@ -1524,18 +1404,11 @@ ${skillInfo.description}
         if (player.gold < 100) { alert("골드가 부족합니다. (100 G 필요)"); return; }
         if (confirm(`100 골드를 사용하여 ${player.job} 직업을 초기화하시겠습니까? 소지품도 모두 사라집니다.`)) {
             player.gold -= 100;
-
-            // 마나 술사 직업 초기화 시 최대 마나 복구
             if (player.job === '마나 술사') {
                 player.maxMp = Math.ceil(player.maxMp / 1.5);
                 player.mp = player.maxMp;
             }
-
-            Object.assign(player, { 
-                job: '없음', inventory: [], 
-                equippedWeapon: null, equippedShield: null, // 장착 아이템 초기화
-                skills: [] 
-            });
+            Object.assign(player, { job: '없음', inventory: [], equippedWeapon: null, equippedShield: null, skills: [] });
             updateAttackPower();
             updateDefense();
             updatePlayerVisuals();
@@ -1545,22 +1418,117 @@ ${skillInfo.description}
         }
     }
 
-    document.addEventListener('keyup', (event) => {
-        keysPressed[event.key.toLowerCase()] = false;
-    });
-
-    document.addEventListener('mousedown', (event) => {
-        if (isGameOver || !shopWindow.classList.contains('hidden') || player.isConversing) return;
-        if (event.button === 0) playerAttack();
-    });
-
+    document.addEventListener('keyup', (event) => { keysPressed[event.key.toLowerCase()] = false; });
+    document.addEventListener('mousedown', (event) => { if (!isGameOver && shopWindow.classList.contains('hidden') && !player.isConversing && event.button === 0) playerAttack(); });
     restartButton.addEventListener('click', () => location.reload());
     closeShopButton.addEventListener('click', closeShop);
     const hiddenShopWindow = document.getElementById('hidden-shop-window');
     const closeHiddenShopButton = document.getElementById('close-hidden-shop-button');
     closeHiddenShopButton.addEventListener('click', () => hiddenShopWindow.classList.add('hidden'));
-
     closeDialogueButton.addEventListener('click', hideDialogue);
+
+    const nameDecoratorWindow = document.getElementById('title-window');
+    const nameColorListEl = document.getElementById('title-list');
+    const closeNameDecoratorWindowButton = document.getElementById('close-title-window-button');
+    closeNameDecoratorWindowButton.addEventListener('click', () => nameDecoratorWindow.classList.add('hidden'));
+
+    const bodyColorWindow = document.getElementById('body-color-window');
+    const bodyColorListEl = document.getElementById('body-color-list');
+    const closeBodyColorWindowButton = document.getElementById('close-body-color-window-button');
+    closeBodyColorWindowButton.addEventListener('click', () => bodyColorWindow.classList.add('hidden'));
+
+    function updatePlayerNameDisplay() {
+        playerNameEl.textContent = player.name;
+        playerNameEl.style.color = player.nameColor;
+        player.nameTagElement.textContent = player.name;
+        player.nameTagElement.style.color = player.nameColor;
+    }
+
+    function openNameDecorator() {
+        nameColorListEl.innerHTML = '';
+        nameColorsData.forEach(colorData => {
+            const li = document.createElement('li');
+            const colorSwatch = `<div style="width: 20px; height: 20px; background-color: ${colorData.color}; border: 1px solid #fff;"></div>`;
+            const isUnlocked = player.unlockedNameColors.includes(colorData.color);
+            
+            li.innerHTML = `${colorSwatch}<span>${colorData.name}</span>`;
+
+            const button = document.createElement('button');
+            if (isUnlocked) {
+                if (player.nameColor === colorData.color) {
+                    button.textContent = '적용중';
+                    button.disabled = true;
+                } else {
+                    button.textContent = '적용';
+                    button.onclick = () => {
+                        player.nameColor = colorData.color;
+                        updatePlayerNameDisplay();
+                        savePlayerData();
+                        openNameDecorator();
+                    };
+                }
+            } else {
+                button.textContent = `구매 (${colorData.cost} G)`;
+                if (player.gold < colorData.cost) button.disabled = true;
+                button.onclick = () => {
+                    if (player.gold >= colorData.cost) {
+                        player.gold -= colorData.cost;
+                        player.unlockedNameColors.push(colorData.color);
+                        player.nameColor = colorData.color;
+                        updatePlayerNameDisplay();
+                        savePlayerData();
+                        openNameDecorator();
+                    }
+                };
+            }
+            li.appendChild(button);
+            nameColorListEl.appendChild(li);
+        });
+        nameDecoratorWindow.classList.remove('hidden');
+    }
+
+    function openBodyColorChanger() {
+        bodyColorListEl.innerHTML = '';
+        bodyColorsData.forEach(colorData => {
+            const li = document.createElement('li');
+            const colorSwatch = `<div style="width: 20px; height: 20px; background-image: ${colorData.color}; border: 1px solid #fff;"></div>`;
+            const isUnlocked = player.unlockedBodyColors.includes(colorData.color);
+            
+            li.innerHTML = `${colorSwatch}<span>${colorData.name}</span>`;
+
+            const button = document.createElement('button');
+            if (isUnlocked) {
+                if (player.bodyColor === colorData.color) {
+                    button.textContent = '적용중';
+                    button.disabled = true;
+                } else {
+                    button.textContent = '적용';
+                    button.onclick = () => {
+                        player.bodyColor = colorData.color;
+                        player.element.style.backgroundImage = player.bodyColor;
+                        savePlayerData();
+                        openBodyColorChanger();
+                    };
+                }
+            } else {
+                button.textContent = `구매 (${colorData.cost} G)`;
+                if (player.gold < colorData.cost) button.disabled = true;
+                button.onclick = () => {
+                    if (player.gold >= colorData.cost) {
+                        player.gold -= colorData.cost;
+                        player.unlockedBodyColors.push(colorData.color);
+                        player.bodyColor = colorData.color;
+                        player.element.style.backgroundImage = player.bodyColor;
+                        savePlayerData();
+                        openBodyColorChanger();
+                    }
+                };
+            }
+            li.appendChild(button);
+            bodyColorListEl.appendChild(li);
+        });
+        bodyColorWindow.classList.remove('hidden');
+    }
 
     function openHiddenShop() {
         const hiddenItemListEl = document.getElementById('hidden-item-list');
@@ -1574,12 +1542,11 @@ ${skillInfo.description}
             
             let canBuy = false;
             if (player.job !== '없음') {
-                if (item.exclusive) {
-                    canBuy = player.job === item.exclusive;
-                } else {
+                if (item.exclusive) canBuy = player.job === item.exclusive;
+                else {
                     switch (item.type) {
                         case 'sword': canBuy = ['전사', '마검사'].includes(player.job); break;
-                        case 'wand':  canBuy = ['마법사', '마검사', '아이스'].includes(player.job); break; // 마나 술사 제외
+                        case 'wand':  canBuy = ['마법사', '마검사', '아이스'].includes(player.job); break;
                         case 'gun':   canBuy = ['건슬링어'].includes(player.job); break;
                         case 'bow':   canBuy = ['궁수'].includes(player.job); break;
                         case 'katana':canBuy = ['검사'].includes(player.job); break;
@@ -1588,7 +1555,7 @@ ${skillInfo.description}
             }
             if (!canBuy) { button.disabled = true; li.style.color = '#888'; }
 
-            button.addEventListener('click', () => buyItem(item, true)); // buyItem 재활용
+            button.addEventListener('click', () => buyItem(item, true));
             hiddenItemListEl.appendChild(li);
         });
         playerInventoryHiddenEl.textContent = player.inventory.join(', ') || '없음';
@@ -1613,26 +1580,20 @@ ${skillInfo.description}
         const pos = hiddenNpcSpawnPoints[Math.floor(Math.random() * hiddenNpcSpawnPoints.length)];
         const npcEl = document.createElement('div');
         npcEl.className = 'hidden-job-master';
-        npcEl.style.position = 'absolute'; // 위치 고정을 위한 스타일 추가
+        npcEl.style.position = 'absolute';
         
         const nameTag = document.createElement('div');
         nameTag.className = 'npc-name-tag';
         nameTag.textContent = dialogueData.hiddenJobMaster.name;
         npcEl.appendChild(nameTag);
 
-        hiddenJobMaster = {
-            element: npcEl,
-            type: 'hiddenJobMaster',
-            x: pos.x,
-            y: pos.y,
-        };
+        hiddenJobMaster = { element: npcEl, type: 'hiddenJobMaster', x: pos.x, y: pos.y };
         
         npcEl.style.left = `${pos.x}px`;
         npcEl.style.top = `${pos.y}px`;
         backgroundLayer.appendChild(npcEl);
 
-        // 일정 시간 후 사라짐
-        setTimeout(despawnHiddenNpc, 60000); // 1분 후 사라짐
+        setTimeout(despawnHiddenNpc, 60000);
     }
 
     function despawnHiddenNpc() {
@@ -1643,19 +1604,13 @@ ${skillInfo.description}
     }
 
     function trySpawnHiddenNpc() {
-        if (hiddenJobMaster) return; // 이미 소환되어 있으면 시도하지 않음
-
-        if (Math.random() < 0.3) { // 30% 확률로 출현
-            spawnHiddenNpc();
-        }
+        if (hiddenJobMaster) return;
+        if (Math.random() < 0.3) spawnHiddenNpc();
     }
 
     createWorld();
     loadPlayerData();
     updateUI();
     gameLoop();
-    setInterval(trySpawnHiddenNpc, 30000); // 30초마다 히든 NPC 출현 시도
+    setInterval(trySpawnHiddenNpc, 30000);
 }
-
-
-// ... (기존 코드)
