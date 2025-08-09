@@ -139,6 +139,20 @@ body {
     border-radius: 2px;
 }
 
+/* Moonlight Greatsword - Exclusive Style */
+.player-weapon.moonlight-greatsword {
+    width: 12px; /* 더 넓은 검 폭 */
+    height: 48px; /* 더 긴 검 길이 */
+    background: linear-gradient(to top, #a2b2ff, #d2d9ff, #ffffff); /* 은은한 푸른빛 그라데이션 */
+    border: 1px solid #6a75b8;
+    box-shadow: 0 0 8px 2px #a2b2ff;
+}
+
+.player-weapon.moonlight-greatsword::after {
+    background: #4a5a8a; /* 어두운 파란색 손잡이 */
+    border-color: #2a3a6a;
+}
+
 /* Wand */
 .player-weapon.wand {
     background: linear-gradient(to top, #6a3ab2, #8A2BE2); /* Staff */
@@ -157,6 +171,34 @@ body {
     border-radius: 50%;
     box-shadow: 0 0 8px #ff00ff, 0 0 12px #DA70D6;
 }
+
+/* Mana Staff - Exclusive for Mana Master */
+.player-weapon.mana-staff {
+    background: linear-gradient(to top, #0052D4, #4364F7, #6FB1FC); /* Blue gradient */
+    border: 1px solid #003380;
+}
+
+.player-weapon.mana-staff::before {
+    background: #00BFFF; /* DeepSkyBlue */
+    box-shadow: 0 0 8px #00BFFF, 0 0 12px #00aaff;
+}
+
+/* Orb of Destruction - Unique Style */
+.player-weapon.orb-of-destruction {
+    width: 24px;
+    height: 24px;
+    background: radial-gradient(circle, #ff4d4d, #b30000, #330000);
+    border: 1px solid #ff8080;
+    border-radius: 50%;
+    box-shadow: 0 0 15px 5px #ff1a1a;
+    animation: pulse-glow 1.5s infinite;
+    /* 지팡이 모양 제거 */
+    transform-origin: center; 
+}
+.player-weapon.orb-of-destruction::before, .player-weapon.orb-of-destruction::after {
+    display: none; /* 기존 지팡이 장식 제거 */
+}
+
 
 /* Gun */
 .player-weapon.gun.facing-right {
@@ -185,6 +227,22 @@ body {
     width: 8px;
     height: 6px;
     background: #777;
+}
+
+/* Dragon Slayer - Exclusive Style */
+.player-weapon.dragon-slayer {
+    width: 30px; /* Bigger */
+    height: 18px;
+    background: linear-gradient(to right, #4d4d4d, #1a1a1a); /* Dark, metallic */
+    border: 1px solid #ff4500; /* OrangeRed border */
+    border-radius: 3px;
+}
+
+.player-weapon.dragon-slayer::before {
+    width: 12px; /* Longer barrel */
+    height: 8px;
+    background: #333;
+    box-shadow: 3px 0 5px #ff4500; /* Red glow at the tip */
 }
 
 /* Bow */
@@ -237,6 +295,21 @@ body {
     background-color: #fff8dc;
 }
 
+/* Whispering Bow - Exclusive Style */
+.player-weapon.whispering-bow .bow-limb {
+    border-color: #98FB98; /* PaleGreen */
+    box-shadow: 0 0 8px 2px #98FB98;
+}
+
+.player-weapon.whispering-bow .bow-grip {
+    background-color: #F0FFF0; /* Honeydew */
+}
+
+.player-weapon.whispering-bow::before {
+    background-color: #AFEEEE; /* PaleTurquoise, for a magical string */
+    box-shadow: 0 0 5px #AFEEEE;
+}
+
 /* Katana */
 /* Katana Base Style */
 .player-weapon.katana {
@@ -269,6 +342,18 @@ body {
     height: 4px; 
     left: -4.5px;
     bottom: -2px;
+}
+
+/* Shadow Dagger - Exclusive Style */
+.player-weapon.shadow-dagger {
+    background: linear-gradient(to top, #4a4a4a, #a5a5a5); /* Darker gradient */
+    border-color: #222;
+    box-shadow: 0 0 5px #888;
+}
+
+.player-weapon.shadow-dagger::after {
+    background: #1a1a1a; /* Black hilt */
+    border-color: #000;
 }
 
 .katana-sheath {
@@ -335,8 +420,17 @@ body {
     z-index: 1;
 }
 
-.house, .shop, .shopkeeper, .monster, .attack-effect, .job-changer, .skill-master, .npc, .fence, .quest-giver, .job-resetter, .level-resetter, .tree {
+.house, .shop, .hidden-shop, .shopkeeper, .monster, .attack-effect, .job-changer, .skill-master, .npc, .fence, .quest-giver, .job-resetter, .level-resetter, .tree, .hidden-merchant {
     position: absolute;
+}
+
+.hidden-shop {
+    width: 100px;
+    height: 80px;
+    background-color: #222;
+    border: 3px solid #4a0a5e;
+    box-shadow: 0 0 10px #9400D3;
+    z-index: 4;
 }
 
 .fence {
@@ -404,8 +498,10 @@ body {
 .level-resetter { width: 32px; height: 32px; background-color: #2E8B57; border: 2px solid #1e5e3a; z-index: 6; border-radius: 50%; }
 .skill-master { width: 32px; height: 32px; background-color: #9400D3; border: 2px solid #4B0082; z-index: 6; box-shadow: 0 0 10px #DA70D6, 0 4px 6px rgba(0,0,0,0.3); }
 .quest-giver { width: 32px; height: 32px; background-color: #FFD700; border: 2px solid #B8860B; z-index: 6; border-radius: 8px; }
+.hidden-merchant { width: 32px; height: 32px; background-color: #2F4F4F; border: 2px solid #000; z-index: 6; }
 
 .hidden-job-master {
+    position: absolute;
     width: 32px;
     height: 32px;
     background-color: #4B0082; /* Indigo */
@@ -559,6 +655,31 @@ body {
     box-shadow: 0 0 8px #00ffff, 0 0 12px #00aaff;
 }
 
+.projectile.mana-bolt {
+    width: 14px;
+    height: 14px;
+    background: radial-gradient(circle, #8e9dff, #3c40c6); /* 밝은 남색 -> 진한 남색 */
+    border-radius: 50%;
+    box-shadow: 0 0 10px #8e9dff, 0 0 15px #3c40c6;
+}
+
+.projectile.mana-arrow {
+    width: 8px;
+    height: 30px;
+    background: linear-gradient(to top, #8e9dff, #d9deff);
+    clip-path: polygon(50% 0%, 100% 80%, 50% 100%, 0% 80%);
+    box-shadow: 0 0 8px #8e9dff;
+}
+
+.projectile.mana-blaster {
+    width: 30px;
+    height: 30px;
+    background: radial-gradient(circle, #d9deff, #8e9dff, #3c40c6);
+    border-radius: 50%;
+    box-shadow: 0 0 15px 5px #8e9dff;
+    animation: pulse-glow 1s infinite;
+}
+
 .projectile.arrow {
     width: 6px;
     height: 25px;
@@ -683,6 +804,27 @@ body {
 #item-list button:disabled { background-color: #555; cursor: not-allowed; }
 #shop-footer { margin-top: 20px; display: flex; justify-content: space-between; }
 #close-shop-button { background-color: #A52A2A; color: white; border: 1px solid #ff9999; cursor: pointer; border-radius: 8px; padding: 10px 20px; }
+
+#hidden-shop-window {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 400px;
+    background-color: rgba(10, 0, 20, 0.85);
+    border: 2px solid #9400D3; /* DarkViolet Border */
+    z-index: 20;
+    padding: 20px;
+    pointer-events: all;
+    border-radius: 15px;
+    box-shadow: 0 0 15px #DA70D6;
+}
+#hidden-shop-window h2 { text-align: center; margin-top: 0; color: #DA70D6; }
+#hidden-item-list { list-style: none; padding: 0; margin: 0; }
+#hidden-item-list li { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #4B0082; }
+#hidden-item-list button { background-color: #4B0082; color: white; border: 1px solid #9400D3; cursor: pointer; border-radius: 8px; padding: 5px 10px; }
+#hidden-item-list button:disabled { background-color: #555; cursor: not-allowed; }
+#close-hidden-shop-button { background-color: #A52A2A; color: white; border: 1px solid #ff9999; cursor: pointer; border-radius: 8px; padding: 10px 20px; }
 
 .hunting-ground {
     position: absolute;
