@@ -24,6 +24,7 @@
         <div id="game-world">
             <!-- WASD로 움직일 배경 요소 -->
             <div id="background-layer"></div>
+            <div id="aquarium-layer" class="hidden"></div>
             <!-- 화면 중앙에 고정될 플레이어 -->
             
         </div>
@@ -136,6 +137,18 @@
                 <div id="fishing-progress-bar"></div>
             </div>
             <div id="fishing-text"></div>
+        </div>
+
+        <!-- 수조 관리 UI -->
+        <div id="tank-ui" class="hidden">
+            <h3>수조 관리</h3>
+            <div id="tank-status">
+                <!-- 현재 수조 상태 -->
+            </div>
+            <div id="tank-inventory-list">
+                <!-- 인벤토리의 물고기 목록 -->
+            </div>
+            <button id="close-tank-ui-button">닫기</button>
         </div>
     </div>
 

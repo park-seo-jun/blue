@@ -56,6 +56,11 @@ function startGame(playerName) {
     const fishIconEl = document.getElementById('fish-icon');
     const fishingProgressBarEl = document.getElementById('fishing-progress-bar');
     const fishingTextEl = document.getElementById('fishing-text');
+    const aquariumLayer = document.getElementById('aquarium-layer');
+    const tankUI = document.getElementById('tank-ui');
+    const tankStatusEl = document.getElementById('tank-status');
+    const tankInventoryListEl = document.getElementById('tank-inventory-list');
+    const closeTankUIButton = document.getElementById('close-tank-ui-button');
 
     // 게임 설정
     const playerSpeed = 5;
@@ -72,10 +77,15 @@ function startGame(playerName) {
     // 게임 객체
     const monsters = [];
     const obstacles = [];
+    const aquariumObstacles = [];
     const projectiles = [];
     const npcs = [];
-    let shopkeeper, jobChanger, jobResetter, levelResetter, skillMaster, questGiver, hiddenMerchant, titleShrine, appearanceMirror, fishingSpot;
+    let shopkeeper, jobChanger, jobResetter, levelResetter, skillMaster, questGiver, hiddenMerchant, titleShrine, appearanceMirror, fishingSpot, aquariumBuilding, aquariumKeeper, aquariumExit;
     let hiddenJobMaster = null;
+    let currentMap = 'overworld'; // 현재 맵 상태 (overworld, aquarium)
+    let overworldPosition = { x: 0, y: 0 }; // 오버월드 위치 저장
+    let fishTanks = []; // 수조 DOM 요소와 데이터를 저장하는 배열
+    let currentTankIndex = -1; // 현재 상호작용 중인 수조 인덱스
 
     const hiddenNpcSpawnPoints = [
         { x: 1200, y: 1050 }, { x: 1800, y: 1050 },
@@ -118,6 +128,8 @@ function startGame(playerName) {
         bodyColor: 'linear-gradient(to bottom right, #3a7bd5, #00d2ff)',
         unlockedBodyColors: ['linear-gradient(to bottom right, #3a7bd5, #00d2ff)'],
         heldItemElement: null,
+        aquariumTanks: [], // 수조 데이터. 예: [{ fish: '붕어' }, { fish: null }],
+        justExited: false, // 맵을 방금 나갔는지 확인하는 플래그
     };
 
     const nameColorsData = [
@@ -183,6 +195,7 @@ function startGame(playerName) {
         'questGiver': { name: '모험가 길드장', lines: ["마을을 위해 힘써줄 모험가를 찾고 있네.", "자네, 모험에 관심 있나?"] },
         'hiddenJobMaster': { name: '가려진 현자', lines: ["세상에는 보편적인 길 말고도... 운명에 감춰진 길이 있다네.", "그대는... 그 길을 마주할 자격이 있는가?"] },
         'hiddenMerchant': { name: '그림자 상인', lines: ["...특별한 물건을 찾나?", "가치는... 지불할 수 있는 자만이 아는 법."], action: { text: '거래한다', handler: openHiddenShop } },
+        'aquariumKeeper': { name: '수족관 관리인', lines: ["어서오세요! 신비한 물고기들의 세계입니다."], action: { text: '입장하기', handler: enterAquarium } },
         'npc': { name: '마을 주민', lines: ["요즘 몬스터들 때문에 걱정이 이만저만이 아니에요.", "저기 사냥터 쪽으로는 가지 않는 게 좋을 거예요.", "전설에 따르면 이 땅 어딘가에 푸른 보석이 잠들어 있대요."] }
     };
 
@@ -198,6 +211,7 @@ function startGame(playerName) {
             activeQuest: player.activeQuest, questProgress: player.questProgress,
             nameColor: player.nameColor, unlockedNameColors: player.unlockedNameColors,
             bodyColor: player.bodyColor, unlockedBodyColors: player.unlockedBodyColors,
+            aquariumTanks: player.aquariumTanks,
         };
         localStorage.setItem('rpgPlayerData', JSON.stringify(playerData));
     }
@@ -218,7 +232,11 @@ function startGame(playerName) {
                 unlockedNameColors: playerData.unlockedNameColors || ['#FFD700'],
                 bodyColor: playerData.bodyColor || 'linear-gradient(to bottom right, #3a7bd5, #00d2ff)',
                 unlockedBodyColors: playerData.unlockedBodyColors || ['linear-gradient(to bottom right, #3a7bd5, #00d2ff)'],
+                aquariumTanks: playerData.aquariumTanks || Array(8).fill({ fish: null }),
             });
+
+            // 데이터 로드 후 수조 비주얼 업데이트
+            updateAllTankVisuals();
 
             if (player.name) {
                 updatePlayerNameDisplay();
@@ -368,6 +386,23 @@ function startGame(playerName) {
         fishingSpot.element.style.left = '200px';
         fishingSpot.element.style.top = '1000px';
         backgroundLayer.appendChild(fishingSpot.element);
+
+        aquariumBuilding = { element: document.createElement('div') };
+        aquariumBuilding.element.className = 'aquarium-building';
+        aquariumBuilding.element.style.left = '500px';
+        aquariumBuilding.element.style.top = '700px';
+        backgroundLayer.appendChild(aquariumBuilding.element);
+        obstacles.push(aquariumBuilding.element);
+
+        aquariumKeeper = { element: document.createElement('div'), type: 'aquariumKeeper' };
+        aquariumKeeper.element.className = 'aquarium-keeper'; // CSS 스타일링을 위해 클래스 추가
+        aquariumKeeper.element.style.left = `${500 + (200 / 2) - 16}px`; // 수족관 중앙 하단
+        aquariumKeeper.element.style.top = `${700 + 160 + 20}px`; // 건물과 겹치지 않게 20px 추가
+        const aquariumKeeperNameTag = document.createElement('div');
+        aquariumKeeperNameTag.className = 'npc-name-tag';
+        aquariumKeeperNameTag.textContent = dialogueData.aquariumKeeper.name;
+        aquariumKeeper.element.appendChild(aquariumKeeperNameTag);
+        backgroundLayer.appendChild(aquariumKeeper.element);
 
         const pathSegments = [
             { x: 1475, y: 1050, width: 200, height: 1000 },
@@ -541,7 +576,7 @@ function startGame(playerName) {
         nameTag.textContent = dialogueData.npc.name;
         npc.element.appendChild(nameTag);
         backgroundLayer.appendChild(npc.element);
-        const thingsToAvoid = [...obstacles, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, questGiver.element, ...npcs.map(n => n.element)];
+        const thingsToAvoid = [...obstacles, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, questGiver.element, aquariumKeeper.element, ...npcs.map(n => n.element)];
         if (thingsToAvoid.some(thing => thing && isColliding(npc.element, thing))) {
             npc.element.remove();
             createNpc();
@@ -1288,13 +1323,22 @@ ${skillInfo.description}
             player.y += moveY;
             player.element.style.left = `${player.x}px`;
             player.element.style.top = `${player.y}px`;
-            if (obstacles.some(obstacle => isColliding(player.element, obstacle))) {
+
+            const currentObstacles = currentMap === 'overworld' ? obstacles : aquariumObstacles;
+            if (currentObstacles.some(obstacle => isColliding(player.element, obstacle))) {
                 player.x -= moveX;
                 player.y -= moveY;
             }
-            player.element.style.left = `${player.x}px`;
-            player.element.style.top = `${player.y}px`;
+
+            // 맵 나가기 체크
+            if (currentMap === 'aquarium' && isColliding(player.element, aquariumExit)) {
+                exitAquarium();
+            }
         }
+
+        // 플레이어 DOM 요소 위치를 한 프레임당 한 번만 업데이트합니다.
+        player.element.style.left = `${player.x}px`;
+        player.element.style.top = `${player.y}px`;
 
         player.manaRegenTimer++;
         if (player.manaRegenTimer >= 60) {
@@ -1319,7 +1363,7 @@ ${skillInfo.description}
                 const originalX = npc.x, originalY = npc.y;
                 npc.x += npcMoveX; npc.y += npcMoveY;
                 npc.element.style.left = `${npc.x}px`; npc.element.style.top = `${npc.y}px`;
-                const collidables = [...obstacles, player.element, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, questGiver.element, ...npcs.filter(other => other !== npc).map(o => o.element)];
+                const collidables = [...obstacles, player.element, shopkeeper.element, jobChanger.element, jobResetter.element, levelResetter.element, skillMaster.element, questGiver.element, aquariumKeeper.element, ...npcs.filter(other => other !== npc).map(o => o.element)];
                 if (collidables.some(item => item && isColliding(npc.element, item))) {
                     npc.x = originalX; npc.y = originalY;
                     npc.element.style.left = `${npc.x}px`; npc.element.style.top = `${npc.y}px`;
@@ -1381,7 +1425,22 @@ ${skillInfo.description}
         }
 
         updateUI();
-        backgroundLayer.style.transform = `translate(${-player.x + window.innerWidth / 2}px, ${-player.y + window.innerHeight / 2}px)`;
+
+        // 현재 맵과 상관없이 두 레이어의 위치를 모두 업데이트합니다.
+        let camX = player.x;
+        let camY = player.y;
+
+        // 방금 맵을 나갔다면, 저장된 위치를 기준으로 카메라를 설정합니다.
+        if (player.justExited) {
+            camX = overworldPosition.x;
+            camY = overworldPosition.y;
+            player.justExited = false;
+        }
+
+        const transformValue = `translate(${-camX + window.innerWidth / 2}px, ${-camY + window.innerHeight / 2}px)`;
+        backgroundLayer.style.transform = transformValue;
+        aquariumLayer.style.transform = transformValue;
+
         gameLoopTimeout = requestAnimationFrame(gameLoop);
     }
 
@@ -1398,7 +1457,7 @@ ${skillInfo.description}
         if (key === 'f') {
             removeHeldItem();
             let interacted = false;
-            const allNpcs = [shopkeeper, jobChanger, skillMaster, jobResetter, levelResetter, questGiver, hiddenJobMaster, hiddenMerchant, ...npcs].filter(Boolean);
+            const allNpcs = [shopkeeper, jobChanger, skillMaster, jobResetter, levelResetter, questGiver, hiddenJobMaster, hiddenMerchant, aquariumKeeper, ...npcs].filter(Boolean);
             for (const npc of allNpcs) {
                 if (npc && npc.element && isColliding(player.element, npc.element)) {
                     showDialogue(npc);
@@ -1407,14 +1466,26 @@ ${skillInfo.description}
                 }
             }
 
-            if (!interacted && titleShrine && isColliding(player.element, titleShrine.element)) {
-                openNameDecorator();
-            }
-            if (!interacted && appearanceMirror && isColliding(player.element, appearanceMirror.element)) {
-                openBodyColorChanger();
-            }
-            if (!interacted && fishingSpot && isColliding(player.element, fishingSpot.element)) {
-                startFishing();
+            if (!interacted) {
+                if (currentMap === 'aquarium') {
+                    for (let i = 0; i < fishTanks.length; i++) {
+                        if (isColliding(player.element, fishTanks[i].element)) {
+                            openTankUI(i);
+                            interacted = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!interacted) {
+                    if (titleShrine && isColliding(player.element, titleShrine.element)) {
+                        openNameDecorator();
+                    } else if (appearanceMirror && isColliding(player.element, appearanceMirror.element)) {
+                        openBodyColorChanger();
+                    } else if (fishingSpot && isColliding(player.element, fishingSpot.element)) {
+                        startFishing();
+                    }
+                }
             }
         }
         if (key === 'e') equipBestGear();
@@ -1508,6 +1579,7 @@ ${skillInfo.description}
     const closeHiddenShopButton = document.getElementById('close-hidden-shop-button');
     closeHiddenShopButton.addEventListener('click', () => hiddenShopWindow.classList.add('hidden'));
     closeDialogueButton.addEventListener('click', hideDialogue);
+    closeTankUIButton.addEventListener('click', closeTankUI);
 
     const nameDecoratorWindow = document.getElementById('title-window');
     const nameColorListEl = document.getElementById('title-list');
@@ -1709,17 +1781,6 @@ ${skillInfo.description}
         updateInventoryUI();
     }
 
-    function holdFish(itemData) {
-        removeHeldItem(); // Remove any existing item
-        const fishEl = document.createElement('div');
-        fishEl.className = 'held-item';
-        fishEl.textContent = itemData.emoji || '🐟';
-        player.heldItemElement = fishEl;
-        player.element.appendChild(fishEl);
-        updateHeldItemPosition();
-        inventoryWindow.classList.add('hidden');
-    }
-
     function removeHeldItem() {
         if (player.heldItemElement) {
             player.heldItemElement.remove();
@@ -1893,7 +1954,201 @@ ${skillInfo.description}
         if (Math.random() < 0.3) spawnHiddenNpc();
     }
 
+    function createAquariumMap() {
+        const mapWidth = 1000;
+        const mapHeight = 800;
+        const wallThickness = 20;
+
+        // Walls
+        const walls = [
+            { x: 0, y: 0, width: mapWidth, height: wallThickness }, // Top
+            { x: 0, y: mapHeight - wallThickness, width: mapWidth, height: wallThickness }, // Bottom
+            { x: 0, y: 0, width: wallThickness, height: mapHeight }, // Left
+            { x: mapWidth - wallThickness, y: 0, width: wallThickness, height: mapHeight } // Right
+        ];
+
+        walls.forEach(w => {
+            const wallEl = document.createElement('div');
+            wallEl.className = 'aquarium-wall';
+            wallEl.style.left = `${w.x}px`;
+            wallEl.style.top = `${w.y}px`;
+            wallEl.style.width = `${w.width}px`;
+            wallEl.style.height = `${w.height}px`;
+            aquariumLayer.appendChild(wallEl);
+            aquariumObstacles.push(wallEl);
+        });
+
+        // Fish Tanks
+        const tankPositions = [
+            { x: 100, y: 100 }, { x: 300, y: 100 }, { x: 500, y: 100 }, { x: 700, y: 100 },
+            { x: 100, y: 550 }, { x: 300, y: 550 }, { x: 500, y: 550 }, { x: 700, y: 550 },
+        ];
+
+        tankPositions.forEach((pos, index) => {
+            const tankEl = document.createElement('div');
+            tankEl.className = 'fish-tank-object';
+            tankEl.style.left = `${pos.x}px`;
+            tankEl.style.top = `${pos.y}px`;
+            tankEl.style.width = '150px';
+            tankEl.style.height = '150px';
+            aquariumLayer.appendChild(tankEl);
+            aquariumObstacles.push(tankEl);
+            fishTanks.push({ element: tankEl, index: index }); // 수조 정보를 배열에 저장
+        });
+
+        // Exit
+        aquariumExit = document.createElement('div');
+        aquariumExit.className = 'aquarium-exit';
+        aquariumExit.style.left = `${mapWidth / 2 - 50}px`;
+        aquariumExit.style.top = `${wallThickness + 10}px`; // 위쪽 벽 근처로 이동
+        aquariumExit.style.width = '100px';
+        aquariumExit.style.height = '30px';
+        const exitText = document.createElement('p');
+        exitText.textContent = '나가기';
+        aquariumExit.appendChild(exitText);
+        aquariumLayer.appendChild(aquariumExit);
+    }
+
+    function enterAquarium() {
+        hideDialogue();
+        currentMap = 'aquarium';
+
+        // 현재 위치 저장
+        overworldPosition = { x: player.x, y: player.y };
+
+        // 맵 전환
+        backgroundLayer.classList.add('hidden');
+        backgroundLayer.style.transform = ''; // 이전 맵 위치 초기화
+        aquariumLayer.classList.remove('hidden');
+        aquariumLayer.appendChild(player.element); // 플레이어를 수족관 레이어로 이동
+
+        // 수족관 입구 위치로 플레이어 이동
+        player.x = 500;
+        player.y = 700;
+
+        // 플레이어와 카메라 위치 즉시 업데이트
+        player.element.style.left = `${player.x}px`;
+        player.element.style.top = `${player.y}px`;
+    }
+
+    function exitAquarium() {
+        currentMap = 'overworld';
+        player.justExited = true;
+
+        // 맵 전환
+        aquariumLayer.classList.add('hidden');
+        aquariumLayer.style.transform = ''; // 이전 맵 위치 초기화
+        backgroundLayer.classList.remove('hidden');
+        backgroundLayer.appendChild(player.element); // 플레이어를 월드 레이어로 이동
+
+        // 저장된 위치로 복귀
+        player.x = overworldPosition.x;
+        player.y = overworldPosition.y;
+        
+        // 플레이어와 카메라 위치 즉시 업데이트
+        player.element.style.left = `${player.x}px`;
+        player.element.style.top = `${player.y}px`;
+
+        // 맵 전환 시 원치 않는 움직임을 막기 위해 키 입력 상태를 초기화합니다.
+        for (const key in keysPressed) {
+            keysPressed[key] = false;
+        }
+    }
+
+    function openTankUI(tankIndex) {
+        currentTankIndex = tankIndex;
+        player.isConversing = true; // UI가 열려있는 동안 움직임 방지
+        updateTankUI();
+        tankUI.classList.remove('hidden');
+    }
+
+    function closeTankUI() {
+        currentTankIndex = -1;
+        player.isConversing = false;
+        tankUI.classList.add('hidden');
+    }
+
+    function updateTankUI() {
+        if (currentTankIndex === -1) return;
+
+        const tankData = player.aquariumTanks[currentTankIndex];
+        tankStatusEl.innerHTML = '';
+        tankInventoryListEl.innerHTML = '';
+
+        // 수조 상태 표시
+        if (tankData && tankData.fish) {
+            const fishInfo = fishData.find(f => f.name === tankData.fish);
+            tankStatusEl.innerHTML = `<p>${fishInfo.emoji} ${fishInfo.name}이(가) 있습니다.</p>`;
+            const takeOutButton = document.createElement('button');
+            takeOutButton.textContent = '꺼내기';
+            takeOutButton.onclick = () => {
+                player.inventory.push(tankData.fish);
+                player.aquariumTanks[currentTankIndex] = { fish: null };
+                updateTankVisual(currentTankIndex);
+                updateTankUI();
+                savePlayerData();
+            };
+            tankStatusEl.appendChild(takeOutButton);
+        } else {
+            tankStatusEl.innerHTML = '<p>이 수조는 비어있습니다.</p>';
+        }
+
+        // 인벤토리의 물고기 목록 표시
+        const inventoryFish = player.inventory.filter(itemName => fishData.some(f => f.name === itemName));
+        if (inventoryFish.length > 0) {
+            inventoryFish.forEach(fishName => {
+                const fishInfo = fishData.find(f => f.name === fishName);
+                const li = document.createElement('div');
+                li.innerHTML = `<span>${fishInfo.emoji} ${fishInfo.name}</span>`;
+                const displayButton = document.createElement('button');
+                displayButton.textContent = '전시하기';
+                // 현재 수조가 비어있을 때만 전시 가능
+                if (tankData && !tankData.fish) {
+                    displayButton.onclick = () => {
+                        const itemIndex = player.inventory.indexOf(fishName);
+                        player.inventory.splice(itemIndex, 1);
+                        player.aquariumTanks[currentTankIndex] = { fish: fishName };
+                        updateTankVisual(currentTankIndex);
+                        updateTankUI();
+                        savePlayerData();
+                    };
+                } else {
+                    displayButton.disabled = true;
+                }
+                li.appendChild(displayButton);
+                tankInventoryListEl.appendChild(li);
+            });
+        } else {
+            tankInventoryListEl.innerHTML = '<div>가진 물고기가 없습니다.</div>';
+        }
+    }
+
+    function updateTankVisual(tankIndex) {
+        const tank = fishTanks[tankIndex];
+        const tankData = player.aquariumTanks[tankIndex];
+        tank.element.innerHTML = ''; // 기존 내용 삭제
+
+        if (tankData && tankData.fish) {
+            const fishInfo = fishData.find(f => f.name === tankData.fish);
+            const fishEmoji = document.createElement('div');
+            fishEmoji.style.fontSize = '3rem';
+            fishEmoji.style.animation = 'swim 8s infinite ease-in-out';
+            fishEmoji.textContent = fishInfo.emoji;
+            tank.element.style.display = 'flex';
+            tank.element.style.justifyContent = 'center';
+            tank.element.style.alignItems = 'center';
+            tank.element.appendChild(fishEmoji);
+        }
+    }
+
+    function updateAllTankVisuals() {
+        for (let i = 0; i < fishTanks.length; i++) {
+            updateTankVisual(i);
+        }
+    }
+
     createWorld();
+    createAquariumMap();
     loadPlayerData();
     updateUI();
     gameLoop();
