@@ -44,8 +44,7 @@ body {
     animation: float-in 1s ease-out forwards;
 }
 
-/* --- 이름 입력 UI 개선 --- */
-#name-input-container {
+#login-container, #name-input-container {
     margin-top: 40px;
     padding: 40px;
     background-color: rgba(0, 0, 0, 0.3);
@@ -54,19 +53,20 @@ body {
     box-shadow: 0 0 30px rgba(0, 170, 255, 0.2);
     animation: float-in 1s ease-out 0.5s forwards;
     opacity: 0;
+    width: 350px;
 }
 
-#name-input-container h2 {
+#login-container h2, #name-input-container h2 {
     font-family: 'Do Hyeon', sans-serif;
     font-size: 1.8rem;
     color: #ddeeff;
     margin-bottom: 25px;
 }
 
-#player-name-input {
+#login-container input, #player-name-input {
     font-family: 'Noto Sans KR', sans-serif;
     font-size: 1.2rem;
-    width: 80%;
+    width: 90%;
     padding: 15px;
     border-radius: 10px;
     border: 2px solid #99ddff;
@@ -74,19 +74,20 @@ body {
     color: #fff;
     text-align: center;
     transition: all 0.3s ease;
+    margin-bottom: 15px;
 }
 
-#player-name-input::placeholder {
+#login-container input::placeholder, #player-name-input::placeholder {
     color: #77aaff;
 }
 
-#player-name-input:focus {
+#login-container input:focus, #player-name-input:focus {
     outline: none;
     border-color: #fff;
     box-shadow: 0 0 15px #99ddff;
 }
 
-#confirm-name-button {
+#login-button, #confirm-name-button, #register-button, #submit-register-button, #back-to-login-button {
     font-family: 'Do Hyeon', sans-serif;
     font-size: 1.5rem;
     color: #99ddff;
@@ -96,16 +97,60 @@ body {
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-top: 30px;
+    margin-top: 10px;
     display: block;
     width: 100%;
 }
 
-#confirm-name-button:hover {
+#login-button:hover, #confirm-name-button:hover, #register-button:hover, #submit-register-button:hover, #back-to-login-button:hover {
     background-color: #99ddff;
     color: #00001a;
     box-shadow: 0 0 20px #99ddff;
 }
+
+#register-container {
+    margin-top: 40px;
+    padding: 40px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    border: 1px solid rgba(153, 221, 255, 0.3);
+    box-shadow: 0 0 30px rgba(0, 170, 255, 0.2);
+    animation: float-in 1s ease-out 0.5s forwards;
+    opacity: 0;
+    width: 350px;
+}
+
+#register-container h2 {
+    font-family: 'Do Hyeon', sans-serif;
+    font-size: 1.8rem;
+    color: #ddeeff;
+    margin-bottom: 25px;
+}
+
+#register-container input {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 1.2rem;
+    width: 90%;
+    padding: 15px;
+    border-radius: 10px;
+    border: 2px solid #99ddff;
+    background-color: rgba(0, 20, 40, 0.8);
+    color: #fff;
+    text-align: center;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+}
+
+#register-container input::placeholder {
+    color: #77aaff;
+}
+
+#register-container input:focus {
+    outline: none;
+    border-color: #fff;
+    box-shadow: 0 0 15px #99ddff;
+}
+
 
 @keyframes float-in {
     from {

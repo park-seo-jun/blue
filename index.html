@@ -12,7 +12,21 @@
 
     <div id="intro-screen">
         <h1 id="game-title">푸른 보석</h1>
-        <div id="name-input-container">
+        <div id="login-container">
+            <h2>로그인</h2>
+            <input type="text" id="username-input" placeholder="아이디" required>
+            <input type="password" id="password-input" placeholder="비밀번호" required>
+            <button id="login-button">로그인</button>
+            <button id="register-button">회원가입</button>
+        </div>
+        <div id="register-container" class="hidden">
+            <h2>회원가입</h2>
+            <input type="text" id="new-username-input" placeholder="새 아이디" required>
+            <input type="password" id="new-password-input" placeholder="새 비밀번호" required>
+            <button id="submit-register-button">가입</button>
+            <button id="back-to-login-button">뒤로</button>
+        </div>
+        <div id="name-input-container" class="hidden">
             <h2>당신의 이름은 무엇입니까?</h2>
             <input type="text" id="player-name-input" placeholder="이름 입력..." maxlength="10">
             <button id="confirm-name-button">모험 시작</button>

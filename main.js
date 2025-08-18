@@ -1,8 +1,74 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const loginButton = document.getElementById('login-button');
+    const registerButton = document.getElementById('register-button');
+    const submitRegisterButton = document.getElementById('submit-register-button');
+    const backToLoginButton = document.getElementById('back-to-login-button');
+
+    const usernameInput = document.getElementById('username-input');
+    const passwordInput = document.getElementById('password-input');
+    const newUsernameInput = document.getElementById('new-username-input');
+    const newPasswordInput = document.getElementById('new-password-input');
+
+    const loginContainer = document.getElementById('login-container');
+    const registerContainer = document.getElementById('register-container');
+    const nameInputContainer = document.getElementById('name-input-container');
+    
     const confirmButton = document.getElementById('confirm-name-button');
     const playerNameInput = document.getElementById('player-name-input');
     const introScreen = document.getElementById('intro-screen');
     const gameContainer = document.getElementById('game-container');
+
+    // Dummy user for testing
+    if (!localStorage.getItem('users')) {
+        const users = {};
+        users['user'] = '1234';
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+
+    registerButton.addEventListener('click', () => {
+        loginContainer.classList.add('hidden');
+        registerContainer.classList.remove('hidden');
+    });
+
+    backToLoginButton.addEventListener('click', () => {
+        registerContainer.classList.add('hidden');
+        loginContainer.classList.remove('hidden');
+    });
+
+    submitRegisterButton.addEventListener('click', () => {
+        const newUsername = newUsernameInput.value;
+        const newPassword = newPasswordInput.value;
+
+        if (!newUsername || !newPassword) {
+            alert('아이디와 비밀번호를 모두 입력해주세요.');
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+
+        if (users[newUsername]) {
+            alert('이미 존재하는 아이디입니다.');
+        } else {
+            users[newUsername] = newPassword;
+            localStorage.setItem('users', JSON.stringify(users));
+            alert('회원가입이 완료되었습니다.');
+            registerContainer.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+        }
+    });
+
+    loginButton.addEventListener('click', () => {
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+        const users = JSON.parse(localStorage.getItem('users')) || {};
+
+        if (users[username] && users[username] === password) {
+            loginContainer.classList.add('hidden');
+            nameInputContainer.classList.remove('hidden');
+        } else {
+            alert('아이디 또는 비밀번호가 잘못되었습니다.');
+        }
+    });
 
     confirmButton.addEventListener('click', () => {
         const playerName = playerNameInput.value.trim() || '모험가';
