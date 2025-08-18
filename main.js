@@ -351,17 +351,59 @@ function startGame(playerName) {
             { x: 1700, y: 1100 }, { x: 1700, y: 1350 }, { x: 1700, y: 1600 }, { x: 1700, y: 1850 },
             { x: 1050, y: 1250 }, { x: 1950, y: 1250 }
         ];
+
+        const wallColors = [
+            'linear-gradient(to bottom, #F5DEB3, #D2B48C)', // Wheat to Tan
+            'linear-gradient(to bottom, #B0C4DE, #8494A8)', // LightSteelBlue to a darker shade
+            'linear-gradient(to bottom, #FFDAB9, #E6A48D)', // PeachPuff to a darker shade
+            'linear-gradient(to bottom, #98FB98, #66B266)', // PaleGreen to a darker shade
+            'linear-gradient(to bottom, #E6E6FA, #C8C8E0)'  // Lavender to a darker shade
+        ];
+        const roofColors = [
+            'repeating-linear-gradient(45deg, #A52A2A, #A52A2A 10px, #800000 10px, #800000 20px)', // Red tile
+            'repeating-linear-gradient(45deg, #4682B4, #4682B4 10px, #2E6184 10px, #2E6184 20px)', // Blue tile
+            'repeating-linear-gradient(45deg, #228B22, #228B22 10px, #1A661A 10px, #1A661A 20px)', // Green tile
+            '#6B4226' // Simple Brown
+        ];
+        const roofShapes = [
+            'polygon(0% 100%, 0% 20%, 50% 0%, 100% 20%, 100% 100%)', // Standard Gable
+            'polygon(0 100%, 0 0, 100% 0, 100% 100%)', // Flat roof
+            'polygon(50% 0%, 100% 100%, 0% 100%)', // Triangle / A-frame
+            'polygon(0% 100%, 0% 30%, 20% 0%, 80% 0%, 100% 30%, 100% 100%)' // Mansard-like
+        ];
+
         housePositions.forEach(pos => {
             const house = document.createElement('div');
             house.className = 'house';
             house.style.left = `${pos.x}px`; house.style.top = `${pos.y}px`;
-            const wall = document.createElement('div'); wall.className = 'wall';
-            const roof = document.createElement('div'); roof.className = 'roof';
+            
+            const wall = document.createElement('div'); 
+            wall.className = 'wall';
+            wall.style.background = wallColors[Math.floor(Math.random() * wallColors.length)];
+
+            const roof = document.createElement('div'); 
+            roof.className = 'roof';
+            roof.style.background = roofColors[Math.floor(Math.random() * roofColors.length)];
+            roof.style.clipPath = roofShapes[Math.floor(Math.random() * roofShapes.length)];
+
             const door = document.createElement('div'); door.className = 'door';
             const window1 = document.createElement('div'); window1.className = 'window window-left';
             const window2 = document.createElement('div'); window2.className = 'window window-right';
+            
+            // Adjust window positions to be more robust
+            window1.style.left = '15px';
+            window2.style.right = '15px';
+
             wall.appendChild(door); wall.appendChild(window1); wall.appendChild(window2);
             house.appendChild(roof); house.appendChild(wall);
+            
+            // Only add a chimney if the roof is not flat or A-frame
+            if (!roof.style.clipPath.includes('polygon(0 100%, 0 0, 100% 0, 100% 100%)') && !roof.style.clipPath.includes('polygon(50% 0%, 100% 100%, 0% 100%)')) {
+                const chimney = document.createElement('div');
+                chimney.className = 'chimney';
+                house.appendChild(chimney);
+            }
+
             backgroundLayer.appendChild(house);
             obstacles.push(house);
         });
@@ -491,7 +533,7 @@ function startGame(playerName) {
         ];
         treePositions.forEach(pos => createTree(pos.x, pos.y));
 
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 20; i++) {
             const grassEl = document.createElement('div');
             grassEl.className = 'grass-patch';
             grassEl.textContent = '^^';
@@ -1554,6 +1596,9 @@ ${skillInfo.description}
                 }
             }
         }
+        if (key === 'enter') {
+            playerAttack();
+        }
         if (key === 'e') equipBestGear();
         if (key === 'q') usePotion();
         if (key === 'r') useManaPotion();
@@ -1662,6 +1707,7 @@ ${skillInfo.description}
         if (!inventoryWindow.classList.contains('hidden')) {
             updateInventoryUI();
         }
+        inventoryButton.blur(); // 버튼에서 포커스 제거
     });
 
     function updatePlayerNameDisplay() {

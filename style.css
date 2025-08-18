@@ -774,25 +774,27 @@ body {
 }
 
 .house, .shop {
-    box-shadow: 10px 10px 15px rgba(0,0,0,0.4);
     z-index: 4; /* 길보다 위에 보이도록 z-index 추가 */
 }
 
 .house .wall { 
     width: 150px; 
     height: 120px; 
-    background: linear-gradient(to bottom, #F5DEB3, #D2B48C); /* Wheat to Tan */
     border: 4px solid #5C4033; 
     position: relative; /* For positioning door/windows */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    background-size: 20px 20px;
 }
 .house .roof { 
     width: 180px; 
     height: 80px; 
-    background: repeating-linear-gradient(45deg, #A52A2A, #A52A2A 10px, #800000 10px, #800000 20px);
     position: absolute; 
     top: -70px; 
     left: -15px; 
     clip-path: polygon(0% 100%, 0% 20%, 50% 0%, 100% 20%, 100% 100%); 
+    border-radius: 5px; /* Slightly rounded corners */
+    box-shadow: 0 8px 15px rgba(0,0,0,0.4); /* Stronger shadow */
+    border: 2px solid #600;
 }
 .house .door {
     position: absolute;
@@ -803,22 +805,162 @@ body {
     height: 60px;
     background-color: #8B4513;
     border: 2px solid #5C4033;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+}
+.house .door::before { /* Door handle */
+    content: '';
+    position: absolute;
+    top: 30px;
+    left: 5px;
+    width: 5px;
+    height: 5px;
+    background-color: #DAA520;
+    border-radius: 50%;
+    box-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 .house .window {
     position: absolute;
-    top: 25px;
+    top: 40px;
     width: 30px;
     height: 30px;
-    background-color: #FFD700;
-    border: 3px solid #8B4513;
-    box-shadow: 0 0 15px #FFD700, inset 0 0 5px rgba(0,0,0,0.3);
+    background-color: #87CEEB; /* Lighter blue for glass */
+    border: 3px solid #5C4033; /* Darker frame */
+    box-shadow: 0 0 15px #99ddff, inset 0 0 5px rgba(0,0,0,0.3);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
 }
-.house .window-left { left: 15px; }
-.house .window-right { right: 15px; }
+.house .window::before { /* Window pane horizontal divider */
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #5C4033;
+    transform: translateY(-50%);
+}
+.house .window::after { /* Window pane vertical divider */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    background-color: #5C4033;
+    transform: translateX(-50%);
+}
 
-.shop .wall { width: 220px; height: 150px; background: linear-gradient(to bottom, #e0c4a0, #b88a6d); border: 4px solid #5C4033; }
-.shop .roof { width: 250px; height: 60px; background: #006400; position: absolute; top: -30px; left: -15px; }
-.shop .sign { position: absolute; top: 50px; left: -30px; width: 30px; height: 50px; background-color: #8B4513; writing-mode: vertical-rl; text-orientation: upright; text-align: center; font-size: 18px; color: #FFD700; }
+.house .chimney {
+    position: absolute;
+    width: 25px;
+    height: 50px;
+    background-color: #8B4513; /* Brown brick */
+    border: 2px solid #5C4033;
+    top: -110px; /* Position above the roof */
+    left: 20px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzg0NDUyQyIvPjxwYXRoIGQ9Ik0wIDBoMjB2MjBIMHptMjAgMjBoMjB2MjBIMjB6bTIwLTIwdjIwSDIwem0yMC0yMHYyMEg0MHptMjAgMjB2MjBINjB6bTIwLTIwdjIwSDgweiIgZmlsbD0iIzU0MjYxNCIgb3BhY2l0eT0iMC41Ii8+PC9zdmc+'); /* Chimney brick pattern */
+    background-size: 15px 15px;
+}
+.house .chimney::before { /* Chimney top */
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    background-color: #333;
+    top: 0;
+    left: 0;
+    border-bottom: 1px solid #000;
+}
+
+.shop .wall { 
+    width: 220px; 
+    height: 150px; 
+    background: linear-gradient(to bottom, #e0c4a0, #b88a6d); 
+    border: 4px solid #5C4033; 
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+    background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iI0UwQzRBMCIvPjxwYXRoIGQ9Ik0wIDBoMjB2MjBIMHptMjAgMjBoMjB2MjBIMjB6bTIwLTIwdjIwSDIwem0yMC0yMHYyMEg0MHptMjAgMjB2MjBINjB6bTIwLTIwdjIwSDgweiIgZmlsbD0iI0I4ODk2RCIgb3BhY2l0eT0iMC41Ii8+PC9zdmc+'); /* Wood paneling pattern */
+    background-size: 25px 25px;
+}
+.shop .roof { 
+    width: 250px; 
+    height: 60px; 
+    background: #006400; 
+    position: absolute; 
+    top: -30px; 
+    left: -15px; 
+    border-radius: 5px; 
+    box-shadow: 0 8px 15px rgba(0,0,0,0.4);
+    border: 2px solid #004000;
+}
+.shop .sign { 
+    position: absolute; 
+    top: 50px; 
+    left: -30px; 
+    width: 30px; 
+    height: 50px; 
+    background-color: #8B4513; 
+    writing-mode: vertical-rl; 
+    text-orientation: upright; 
+    text-align: center; 
+    font-size: 18px; 
+    color: #FFD700; 
+    border: 2px solid #5C4033;
+    border-radius: 5px;
+    box-shadow: 3px 3px 5px rgba(0,0,0,0.3);
+}
+.shop::before { /* Shop entrance step */
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 10px;
+    background-color: #A0522D;
+    border: 1px solid #5C4033;
+    border-radius: 3px;
+    z-index: 3;
+}
+.shop::after { /* Shop window */
+    content: '';
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 60px;
+    background-color: #87CEEB; /* Glass color */
+    border: 3px solid #5C4033;
+    border-radius: 5px;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.3), 0 0 10px rgba(135,206,235,0.5);
+    overflow: hidden;
+}
+.shop::after::before { /* Window pane horizontal divider */
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #5C4033;
+    transform: translateY(-50%);
+}
+.shop::after::after { /* Window pane vertical divider */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 2px;
+    height: 100%;
+    background-color: #5C4033;
+    transform: translateX(-50%);
+}
 
 .shopkeeper, .job-changer, .job-resetter, .level-resetter, .skill-master, .npc, .quest-giver {
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
