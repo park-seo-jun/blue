@@ -1865,6 +1865,20 @@ ${skillInfo.description}
         });
     }
 
+    function holdFish(fishData) {
+        removeHeldItem(); // Remove any currently held item
+
+        const fishEl = document.createElement('div');
+        fishEl.className = 'held-item';
+        fishEl.textContent = fishData.emoji;
+
+        player.heldItemElement = fishEl;
+        player.element.appendChild(fishEl);
+
+        updateHeldItemPosition();
+        inventoryWindow.classList.add('hidden'); // Close inventory
+    }
+
     function equipItem(itemData) {
         removeHeldItem();
         if (itemData.type.includes('shield')) {
