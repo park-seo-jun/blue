@@ -1563,9 +1563,6 @@ ${skillInfo.description}
         if (player.isConversing) return;
 
         if (key === 'f') {
-            console.log('F key pressed');
-            console.log('currentMap:', currentMap);
-            console.log('player.isConversing:', player.isConversing);
             removeHeldItem();
             let interacted = false;
             const allNpcs = [shopkeeper, jobChanger, skillMaster, jobResetter, levelResetter, questGiver, hiddenJobMaster, hiddenMerchant, aquariumKeeper, ...npcs].filter(Boolean);
@@ -1579,11 +1576,8 @@ ${skillInfo.description}
 
             if (!interacted) {
                 if (currentMap === 'aquarium') {
-                    console.log('in aquarium');
                     for (let i = 0; i < fishTanks.length; i++) {
-                        console.log(`checking collision with tank ${i}`)
                         if (isColliding(player.element, fishTanks[i].element)) {
-                            console.log(`collision with tank ${i} detected`);
                             openTankUI(i);
                             interacted = true;
                             break;
