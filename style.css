@@ -1236,6 +1236,24 @@ body {
     50% { top: 210px; }
 }
 
+@keyframes tank-swim {
+    0% {
+        transform: translate(0, 0) rotateY(0deg);
+    }
+    25% {
+        transform: translate(20px, 5px) rotateY(0deg);
+    }
+    50% {
+        transform: translate(20px, -5px) rotateY(180deg);
+    }
+    75% {
+        transform: translate(0, 5px) rotateY(180deg);
+    }
+    100% {
+        transform: translate(0, 0) rotateY(0deg);
+    }
+}
+
 
 
 

@@ -1563,6 +1563,9 @@ ${skillInfo.description}
         if (player.isConversing) return;
 
         if (key === 'f') {
+            console.log('F key pressed');
+            console.log('currentMap:', currentMap);
+            console.log('player.isConversing:', player.isConversing);
             removeHeldItem();
             let interacted = false;
             const allNpcs = [shopkeeper, jobChanger, skillMaster, jobResetter, levelResetter, questGiver, hiddenJobMaster, hiddenMerchant, aquariumKeeper, ...npcs].filter(Boolean);
@@ -1576,8 +1579,11 @@ ${skillInfo.description}
 
             if (!interacted) {
                 if (currentMap === 'aquarium') {
+                    console.log('in aquarium');
                     for (let i = 0; i < fishTanks.length; i++) {
+                        console.log(`checking collision with tank ${i}`)
                         if (isColliding(player.element, fishTanks[i].element)) {
+                            console.log(`collision with tank ${i} detected`);
                             openTankUI(i);
                             interacted = true;
                             break;
@@ -2118,7 +2124,6 @@ ${skillInfo.description}
             tankEl.style.width = '150px';
             tankEl.style.height = '150px';
             aquariumLayer.appendChild(tankEl);
-            aquariumObstacles.push(tankEl);
             fishTanks.push({ element: tankEl, index: index }); // 수조 정보를 배열에 저장
         });
 
@@ -2258,7 +2263,7 @@ ${skillInfo.description}
             const fishInfo = fishData.find(f => f.name === tankData.fish);
             const fishEmoji = document.createElement('div');
             fishEmoji.style.fontSize = '3rem';
-            fishEmoji.style.animation = 'swim 8s infinite ease-in-out';
+            fishEmoji.style.animation = 'tank-swim 8s infinite ease-in-out';
             fishEmoji.textContent = fishInfo.emoji;
             tank.element.style.display = 'flex';
             tank.element.style.justifyContent = 'center';
