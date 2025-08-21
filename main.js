@@ -390,9 +390,7 @@ function startGame(playerName) {
             const window1 = document.createElement('div'); window1.className = 'window window-left';
             const window2 = document.createElement('div'); window2.className = 'window window-right';
             
-            // Adjust window positions to be more robust
-            window1.style.left = '15px';
-            window2.style.right = '15px';
+            
 
             wall.appendChild(door); wall.appendChild(window1); wall.appendChild(window2);
             house.appendChild(roof); house.appendChild(wall);
