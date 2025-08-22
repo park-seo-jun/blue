@@ -599,6 +599,27 @@ function startGame(playerName) {
             obstacles.push(fenceEl);
         });
 
+        const fireSlimeArea = { x: -1200, y: 1500, width: 1000, height: 1000 };
+        for (let i = 0; i < 12; i++) createFireSlime(fireSlimeArea);
+
+        const fireFenceSegments = [
+            { x: fireSlimeArea.x, y: fireSlimeArea.y, width: fireSlimeArea.width, height: 20 },
+            { x: fireSlimeArea.x, y: fireSlimeArea.y + fireSlimeArea.height - 20, width: fireSlimeArea.width, height: 20 },
+            { x: fireSlimeArea.x, y: fireSlimeArea.y, width: 20, height: fireSlimeArea.height },
+            { x: fireSlimeArea.x + fireSlimeArea.width - 20, y: fireSlimeArea.y, width: 20, height: (fireSlimeArea.height / 2) - 75 },
+            { x: fireSlimeArea.x + fireSlimeArea.width - 20, y: fireSlimeArea.y + (fireSlimeArea.height / 2) + 75, width: 20, height: (fireSlimeArea.height / 2) - 75 },
+        ];
+        fireFenceSegments.forEach(seg => {
+            const fenceEl = document.createElement('div');
+            fenceEl.className = 'fence';
+            fenceEl.style.left = `${seg.x}px`; fenceEl.style.top = `${seg.y}px`;
+            fenceEl.style.width = `${seg.width}px`; fenceEl.style.height = `${seg.height}px`;
+            fenceEl.style.backgroundColor = '#8B0000'; // DarkRed for fire theme
+            fenceEl.style.borderColor = '#FF4500'; // OrangeRed border
+            backgroundLayer.appendChild(fenceEl);
+            obstacles.push(fenceEl);
+        });
+
         // 꾸미기 공간 울타리
         const decorationFenceSegments = [
             { x: 1980, y: 1480, width: 70, height: 20 }, // Top
@@ -666,6 +687,24 @@ function startGame(playerName) {
         backgroundLayer.appendChild(monster.element);
     }
 
+    function createFireSlime(area) {
+        const monsterEl = document.createElement('div');
+        monsterEl.className = 'monster fire-slime';
+        const healthBarContainer = document.createElement('div'); healthBarContainer.className = 'health-bar-container';
+        const healthBar = document.createElement('div'); healthBar.className = 'health-bar';
+        healthBarContainer.appendChild(healthBar);
+        monsterEl.appendChild(healthBarContainer);
+        const monster = {
+            element: monsterEl, healthBar: healthBar, type: 'fire-slime',
+            x: area.x + Math.random() * (area.width - 35), y: area.y + Math.random() * (area.height - 35),
+            hp: 80, maxHp: 80, xpValue: 60, goldValue: 50, speed: 0.7 + Math.random() * 0.5,
+            effects: [],
+        };
+        monster.element.style.left = `${monster.x}px`; monster.element.style.top = `${monster.y}px`;
+        monsters.push(monster);
+        backgroundLayer.appendChild(monster.element);
+    }
+
     function createNpc() {
         const npcEl = document.createElement('div');
         npcEl.className = 'npc';
@@ -705,6 +744,14 @@ function startGame(playerName) {
                 createHarderMonster({ x: 3000, y: -1600, width: 1000, height: 1500 });
             }
         }, 8000);
+    }
+
+    function respawnFireSlime() {
+        setTimeout(() => {
+            if (monsters.filter(m => m.type === 'fire-slime').length < 12) {
+                createFireSlime({ x: -1200, y: 1500, width: 1000, height: 1000 });
+            }
+        }, 6000);
     }
 
     function createFloatingText(text, type, x, y) {
@@ -870,6 +917,7 @@ function startGame(playerName) {
         
         if (monster.type === 'slime') respawnMonster();
         else if (monster.type === 'golem') respawnHarderMonster();
+        else if (monster.type === 'fire-slime') respawnFireSlime();
     }
 
     function takeDamage(monster, damage) {

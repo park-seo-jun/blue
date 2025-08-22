@@ -1359,6 +1359,24 @@ body {
     border: 3px solid #343a40; /* 더 어두운 회색 */
     border-radius: 8px;
 }
+
+.monster.fire-slime {
+    width: 35px;
+    height: 35px;
+    background: radial-gradient(circle at 10px 10px, #ff7e5f, #feb47b);
+    border-radius: 50%;
+    border: 2px solid #ff4500;
+    animation: fire-pulse 1s infinite alternate;
+}
+
+@keyframes fire-pulse {
+    from {
+        box-shadow: 0 0 5px #ff4500, 0 0 10px #ff7e5f;
+    }
+    to {
+        box-shadow: 0 0 10px #ff4500, 0 0 20px #ff7e5f;
+    }
+}
 .attack-effect { background-color: rgba(255, 255, 255, 0.4); z-index: 11; }
 .attack-effect.slash {
     background: none;
